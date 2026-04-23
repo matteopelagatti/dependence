@@ -49,8 +49,8 @@ indeptest(x, y, ...)
   y,
   p = nlevels(x) - 1,
   q = max(1L, floor(length(y)^(0.3)) - 1L),
-  basis_fct = c("spline", "poly", "dummy"),
-  basis_num = c("spline", "poly"),
+  basis_fct = c("poly", "spline", "dummy"),
+  basis_num = c("poly", "spline"),
   test = c("Pillai", "Bartlett"),
   ties = c("random", "first", "last"),
   ...
