@@ -1,11 +1,10 @@
 Package: dependence
-Title: What the Package Does (One Line, Title Case)
+Title: A consistent test of independence for any pair of random variables.
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("Matteo", "Pelagatti", , "matteo.pelagatti@unimib.it", role = c("aut", "cre"))
+Description: The package implements a test of indepdence for any kind of random variable and some tools to assess the type of dependence.
+License: `use_gpl3_license()`
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -13,6 +12,7 @@ LinkingTo:
     Rcpp,
     RcppArmadillo
 Imports: 
-    Rcpp
+    Matrix,
+    splines
 URL: https://github.com/matteopelagatti/dependence
 BugReports: https://github.com/matteopelagatti/dependence/issues
