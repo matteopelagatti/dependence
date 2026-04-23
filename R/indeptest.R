@@ -29,9 +29,24 @@
 #' @param x A numeric vector or factor.
 #' @param y A numeric vector or factor of the same length
 #'   as \code{x}.
-#' @param ... Additional arguments passed to the
-#'   appropriate method; see the method-specific
-#'   documentation below.
+#' @param p Integer. Number of basis functions for \code{x}.
+#'   Defaults depend on the types of the variables.
+#' @param q Integer. Number of basis functions for \code{y}.
+#'   Defaults depend on the types of the variables.
+#' @param basis Character string specifying the type of basis functions
+#'   (\code{"poly"}, \code{"spline"}, or \code{"dummy"}, the latter being
+#'   valid only for factors).
+#' @param basis_fct Character string specifying the type of basis functions
+#'   for factor variables (\code{"poly"}, \code{"spline"}, or \code{"dummy"}).
+#' @param basis_num Character string specifying the type of basis functions
+#'   for numeric variables (\code{"poly"} or \code{"spline"}).
+#' @param test Vector of character strings: can be \code{"Pillai"},
+#'   \code{"Bartlett"}. Multiple selection is allowed.
+#'   Selects the test statistics to compute.
+#' @param ties Method to manage ties in numeric variables: choose among
+#'   \code{"random"}, \code{"first"}, or \code{"last"}. Corresponds to the
+#'   \code{ties.method} parameter in the \code{rank()} function.
+#' @param ... Additional arguments passed to the appropriate method.
 #'
 #' @return An object of class \code{"indeptest"}, which
 #'   is a list with components:
@@ -79,6 +94,7 @@
 #' ## factor vs numeric
 #' indeptest(x_f, y)
 #'
+#' @importFrom stats pchisq poly
 #' @export
 indeptest <- function(x, y, ...) {
   UseMethod("indeptest")
@@ -147,20 +163,6 @@ indeptest.default <- function(x, y, ...) {
 #' is polynomial, and the default number of basis
 #' functions follows the rule
 #' \eqn{p = q = \max(1, \lfloor n^{0.3} \rfloor - 1)}.
-#'
-#' @param p Integer. Number of basis functions for
-#'   \code{x}. Defaults to
-#'   \code{max(1, floor(n^(0.3)) - 1)}.
-#' @param q Integer. Number of basis functions for
-#'   \code{y}. Defaults to \code{p}.
-#' @param basis Character string, either \code{"poly"}
-#'   (default) or \code{"spline"}, specifying the type of
-#'   basis functions.
-#' @param test Vector of character strings: can be "Pillai",
-#'   "Bartlett", or both. It selects the test statistics to compute.
-#' @param ties Method to manage ties in x and y: choose among
-#'   c("random", "first", "last"), and
-#'   compare the parameter ties.method in the function rank()
 #'
 #' @export
 indeptest.numeric.numeric <- function(x, y,
@@ -233,16 +235,6 @@ indeptest.numeric.numeric <- function(x, y,
 #' these constraints are not respected, \eqn{p} and \eqn{q} are set to the
 #' number of levels minus one (largest possible value).
 #'
-#' @param p Integer. Number of basis functions for
-#'   \code{x}. Defaults to \code{nlevels(x)-1}.
-#' @param q Integer. Number of basis functions for
-#'   \code{y}. Defaults to \code{nlevels(y)-1}.
-#' @param basis Character string, either \code{"poly"}
-#'   (default), \code{"spline"} or \code{"dummy}, specifying the type of
-#'   basis functions.
-#' @param test Vector of character strings: can be "Pillai",
-#'   "Bartlett", or both. It selects the test statistics to compute.
-#'
 #' @export
 indeptest.factor.factor <- function(x, y,
                                     p = nlevels(x)-1,
@@ -289,8 +281,8 @@ indeptest.factor.factor <- function(x, y,
     xi  <- as.integer(x)
     yi  <- as.integer(y)
     if (basis == "poly") {
-      U <- quick_rq(poly(xi, degree = p))
-      V <- quick_rq(poly(yi, degree = q))
+      U <- quick_qr(poly(xi, degree = p))
+      V <- quick_qr(poly(yi, degree = q))
     } else if (basis == "spline") {
       U <- quick_qr(splines::bs(xi, df = p))
       V <- quick_qr(splines::bs(yi, df = q))
@@ -363,28 +355,12 @@ indeptest.character.character <- function(x, y,
 #' basis is used with \code{q} functions as in the
 #' numeric vs numeric method.
 #'
-#' @param p Integer. Number of basis functions for
-#'   \code{x}. Defaults to \code{nlevels(x)-1}.
-#' @param q Integer. Number of basis functions for
-#'   \code{y}. Defaults to \code{max(1L, floor(length(y)^(0.3)) - 1L)}.
-#' @param basis_fct Character string, either \code{"poly"}
-#'   (default), \code{"spline"} or \code{"dummy}, specifying the type of
-#'   basis functions for the factor variable.
-#' @param basis_num Character string, either \code{"poly"}
-#'   (default), \code{"spline"}, specifying the type of
-#'   basis functions for the numeric variable.
-#' @param test Vector of character strings: can be "Pillai",
-#'   "Bartlett", or both. It selects the test statistics to compute.
-#' @param ties Method to manage ties in y (numeric): choose among
-#'   c("random", "first", "last"), and
-#'   compare the parameter ties.method in the function rank()
-#'
 #' @export
 indeptest.factor.numeric <- function(x, y,
                                      p = nlevels(x) - 1,
                                      q = max(1L, floor(length(y)^(0.3)) - 1L),
-                                     basis_fct = c("spline", "poly", "dummy"),
-                                     basis_num = c("spline", "poly"),
+                                     basis_fct = c("poly", "spline", "dummy"),
+                                     basis_num = c("poly", "spline"),
                                      test   = c("Pillai", "Bartlett"),
                                      ties   = c("random", "first", "last"),
                                      ...) {
@@ -420,7 +396,7 @@ indeptest.factor.numeric <- function(x, y,
     function(n, k) chebyshev_basis(n, k)
   } else {
     function(n, k)
-      ortho_spline_basis_int(k, k)
+      ortho_spline_basis_int(n, k)
   }
   ry <- rank(y, ties.method = ties)
   B  <- bf(n, q)
@@ -473,22 +449,6 @@ indeptest.factor.numeric <- function(x, y,
 #' the symmetric case of the factor vs numeric method.
 #' This function inverts the order of x and y, and p and q
 #' and calls the method \code{indeptest.factor.numeric()}.
-#'
-#' @param p Integer. Number of basis functions for
-#'   \code{x}. Defaults to \code{max(1L, floor(length(x)^(0.3)) - 1L)}.
-#' @param q Integer. Number of basis functions for
-#'   \code{y}. Defaults to \code{nlevels(y)-1}.
-#' @param basis_num Character string, either \code{"poly"}
-#'   (default), \code{"spline"}, specifying the type of
-#'   basis functions for the numeric variable.
-#' @param basis_fct Character string, either \code{"poly"}
-#'   (default), \code{"spline"} or \code{"dummy}, specifying the type of
-#'   basis functions for the factor variable.
-#' @param test Vector of character strings: can be "Pillai",
-#'   "Bartlett", or both. It selects the test statistics to compute.
-#' @param ties Method to manage ties in x (numeric): choose among
-#'   c("random", "first", "last"), and
-#'   compare the parameter ties.method in the function rank()
 #'
 #' @export
 indeptest.numeric.factor <- function(x, y,

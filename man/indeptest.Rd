@@ -98,34 +98,31 @@ indeptest(x, y, ...)
 \item{y}{A numeric vector or factor of the same length
 as \code{x}.}
 
-\item{...}{Additional arguments passed to the
-appropriate method; see the method-specific
-documentation below.}
+\item{...}{Additional arguments passed to the appropriate method.}
 
-\item{p}{Integer. Number of basis functions for
-\code{x}. Defaults to \code{max(1L, floor(length(x)^(0.3)) - 1L)}.}
+\item{p}{Integer. Number of basis functions for \code{x}.
+Defaults depend on the types of the variables.}
 
-\item{q}{Integer. Number of basis functions for
-\code{y}. Defaults to \code{nlevels(y)-1}.}
+\item{q}{Integer. Number of basis functions for \code{y}.
+Defaults depend on the types of the variables.}
 
-\item{basis}{Character string, either \code{"poly"}
-(default), \code{"spline"} or \code{"dummy}, specifying the type of
-basis functions.}
+\item{basis}{Character string specifying the type of basis functions
+(\code{"poly"}, \code{"spline"}, or \code{"dummy"}, the latter being
+valid only for factors).}
 
-\item{test}{Vector of character strings: can be "Pillai",
-"Bartlett", or both. It selects the test statistics to compute.}
+\item{test}{Vector of character strings: can be \code{"Pillai"},
+\code{"Bartlett"}. Multiple selection is allowed.
+Selects the test statistics to compute.}
 
-\item{ties}{Method to manage ties in x (numeric): choose among
-c("random", "first", "last"), and
-compare the parameter ties.method in the function rank()}
+\item{ties}{Method to manage ties in numeric variables: choose among
+\code{"random"}, \code{"first"}, or \code{"last"}. Corresponds to the
+\code{ties.method} parameter in the \code{rank()} function.}
 
-\item{basis_fct}{Character string, either \code{"poly"}
-(default), \code{"spline"} or \code{"dummy}, specifying the type of
-basis functions for the factor variable.}
+\item{basis_fct}{Character string specifying the type of basis functions
+for factor variables (\code{"poly"}, \code{"spline"}, or \code{"dummy"}).}
 
-\item{basis_num}{Character string, either \code{"poly"}
-(default), \code{"spline"}, specifying the type of
-basis functions for the numeric variable.}
+\item{basis_num}{Character string specifying the type of basis functions
+for numeric variables (\code{"poly"} or \code{"spline"}).}
 }
 \value{
 An object of class \code{"indeptest"}, which

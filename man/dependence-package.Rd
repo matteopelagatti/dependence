@@ -4,9 +4,9 @@
 \name{dependence-package}
 \alias{dependence}
 \alias{dependence-package}
-\title{dependence: A consistent test of independence for any pair of random variables.}
+\title{dependence: Testing independence}
 \description{
-The package implements a test of indepdence for any kind of random variable and some tools to assess the type of dependence.
+The package implements a test of indepedence for any kind of random variable and some tools to assess the type of dependence.
 }
 \seealso{
 Useful links:

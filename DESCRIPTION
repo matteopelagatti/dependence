@@ -1,10 +1,10 @@
 Package: dependence
-Title: A consistent test of independence for any pair of random variables.
+Title: Testing independence
 Version: 0.0.0.9000
 Authors@R: 
     person("Matteo", "Pelagatti", , "matteo.pelagatti@unimib.it", role = c("aut", "cre"))
-Description: The package implements a test of indepdence for any kind of random variable and some tools to assess the type of dependence.
-License: `use_gpl3_license()`
+Description: The package implements a test of indepedence for any kind of random variable and some tools to assess the type of dependence.
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -13,6 +13,7 @@ LinkingTo:
     RcppArmadillo
 Imports: 
     Matrix,
+    Rcpp,
     splines
 URL: https://github.com/matteopelagatti/dependence
 BugReports: https://github.com/matteopelagatti/dependence/issues

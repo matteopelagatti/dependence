@@ -5,7 +5,7 @@ using namespace arma;
 //' Discrete Chebyshev (Gram) polynomial basis
 //'
 //' Computes the orthonormal polynomial basis on the grid
-//' {1/(n+1), 2/(n+1), ..., n/(n+1)} using the three-term
+//' 1/(n+1), 2/(n+1), ..., n/(n+1) using the three-term
 //' recurrence. Returns an n x p matrix U such that
 //' (1/n) * t(U) %*% U = I_p exactly.
 //' Cost: O(n*p) time, O(n*p) space.

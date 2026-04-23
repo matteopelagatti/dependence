@@ -9,7 +9,7 @@
 #' @returns A \eqn{n\times p} matrix.
 #'
 #' @examples
-#' M <- spline_basis_int(100, 3)
+#' M <- ortho_spline_basis_int(100, 3)
 #' crossprod(M)
 #'
 #' @export

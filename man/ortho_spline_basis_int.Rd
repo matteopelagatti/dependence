@@ -19,7 +19,7 @@ It computes an orthonormal mean-zero version of a cubic splines basis with
 \eqn{p} degrees of freedom and uniform knots.
 }
 \examples{
-M <- spline_basis_int(100, 3)
+M <- ortho_spline_basis_int(100, 3)
 crossprod(M)
 
 }

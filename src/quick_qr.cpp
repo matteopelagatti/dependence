@@ -12,15 +12,15 @@
 //' @returns The Q matrix of the decomposition.
 // [[Rcpp::export]]
 arma::mat quick_qr(arma::mat B) {
-  // 1. Center the columns to have exactly mean zero
-  // B.each_row() subtracts the column means from every row efficiently
-  B.each_row() -= arma::mean(B, 0);
+   // 1. Center the columns to have exactly mean zero
+   // B.each_row() subtracts the column means from every row efficiently
+   B.each_row() -= arma::mean(B, 0);
 
-  arma::mat Q, R;
+   arma::mat Q, R;
 
-  // 2. Economic QR decomposition on the centered matrix
-  arma::qr_econ(Q, R, B);
+   // 2. Economic QR decomposition on the centered matrix
+   arma::qr_econ(Q, R, B);
 
-  // 3. Scale by sqrt(n) and return
-  return Q;
-}
+   // 3. Scale by sqrt(n) and return
+   return Q;
+ }
