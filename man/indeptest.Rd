@@ -34,15 +34,7 @@ indeptest(x, y, ...)
   ...
 )
 
-\method{indeptest}{character.character}(
-  x,
-  y,
-  p = length(unique(x)) - 1,
-  q = length(unique(y)) - 1,
-  basis = c("poly", "spline", "dummy"),
-  test = c("Pillai", "Bartlett"),
-  ...
-)
+\method{indeptest}{character.character}(x, y, ...)
 
 \method{indeptest}{factor.numeric}(
   x,
@@ -68,29 +60,9 @@ indeptest(x, y, ...)
   ...
 )
 
-\method{indeptest}{character.numeric}(
-  x,
-  y,
-  p = nlevels(x) - 1,
-  q = max(1L, floor(length(y)^(0.3)) - 1L),
-  basis_fct = c("spline", "poly", "dummy"),
-  basis_num = c("spline", "poly"),
-  test = c("Pillai", "Bartlett"),
-  ties = c("random", "first", "last"),
-  ...
-)
+\method{indeptest}{character.numeric}(x, y, ...)
 
-\method{indeptest}{numeric.character}(
-  x,
-  y,
-  p = nlevels(x) - 1,
-  q = max(1L, floor(length(y)^(0.3)) - 1L),
-  basis_fct = c("spline", "poly", "dummy"),
-  basis_num = c("spline", "poly"),
-  test = c("Pillai", "Bartlett"),
-  ties = c("random", "first", "last"),
-  ...
-)
+\method{indeptest}{numeric.character}(x, y, ...)
 }
 \arguments{
 \item{x}{A numeric vector or factor.}

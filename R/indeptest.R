@@ -97,6 +97,7 @@
 #' @importFrom stats pchisq poly
 #' @export
 indeptest <- function(x, y, ...) {
+  if (anyNA(x) || anyNA(y)) stop("Missing values (NA) are not allowed in indeptest.")
   UseMethod("indeptest")
 }
 
@@ -108,8 +109,14 @@ indeptest <- function(x, y, ...) {
 #' @keywords internal
 #' @noRd
 indeptest_dispatch2 <- function(x, y, ...) {
-  cl_x        <- class(x)[1]
-  cl_y        <- class(y)[1]
+  cl_x <- if(is.factor(x)) {
+    x <- droplevels(x)
+    "factor"
+  } else class(x)[1]
+  cl_y <- if(is.factor(y)) {
+    y <- droplevels(y)
+    "factor"
+  } else class(y)[1]
   method_name <- paste0("indeptest.", cl_x, ".", cl_y)
   method <- tryCatch(
     get(method_name,
@@ -300,18 +307,6 @@ indeptest.factor.factor <- function(x, y,
         P_stat <- n*(sum(diag(tcrossprod(Suv))))
         P_pval <- pchisq(P_stat, p*q, lower.tail = FALSE)
     }
-    if ("Bartlett" %in% test) {
-      l2 <- svd(Suv, 0, 0)$d^2
-      B_stat <- (-n + (p+q+3)/2)*sum(log(1-l2))
-      B_pval <- pchisq(B_stat, p*q, lower.tail = FALSE)
-      if ("Pillai" %in% test) {
-        P_stat <- n*sum(l2)
-        P_pval <- pchisq(P_stat, p*q, lower.tail = FALSE)
-      }
-    } else {
-      P_stat <- n*sum(diag(crossprod(Suv)))
-      P_pval <- pchisq(P_stat, p*q, lower.tail = FALSE)
-    }
   }
 
   structure(
@@ -335,13 +330,8 @@ indeptest.factor.factor <- function(x, y,
 #' method is called.
 #'
 #' @export
-indeptest.character.character <- function(x, y,
-                                    p = length(unique(x)) - 1,
-                                    q = length(unique(y)) - 1,
-                                    basis  = c("poly", "spline", "dummy"),
-                                    test   = c("Pillai", "Bartlett"), ...) {
-  indeptest.factor.factor(factor(x), factor(y),
-                          p = p, q = q, basis = basis, test = test, ...)
+indeptest.character.character <- function(x, y, ...) {
+  indeptest.factor.factor(factor(x), factor(y), ...)
 }
 
 
@@ -415,18 +405,6 @@ indeptest.factor.numeric <- function(x, y,
     P_stat <- n*(sum(diag(tcrossprod(Suv))))
     P_pval <- pchisq(P_stat, p*q, lower.tail = FALSE)
   }
-  if ("Bartlett" %in% test) {
-    l2 <- svd(Suv, 0, 0)$d^2
-    B_stat <- (-n + (p+q+3)/2)*sum(log(1-l2))
-    B_pval <- pchisq(B_stat, p*q, lower.tail = FALSE)
-    if ("Pillai" %in% test) {
-      P_stat <- n*sum(l2)
-      P_pval <- pchisq(P_stat, p*q, lower.tail = FALSE)
-    }
-  } else {
-    P_stat <- n*sum(diag(crossprod(Suv)))
-    P_pval <- pchisq(P_stat, p*q, lower.tail = FALSE)
-  }
 
   structure(
     list(P_stat = P_stat,
@@ -471,22 +449,8 @@ indeptest.numeric.factor <- function(x, y,
 #' factor and numeric variables is called.
 #'
 #' @export
-indeptest.character.numeric <- function(x, y,
-                                     p = nlevels(x) - 1,
-                                     q = max(1L, floor(length(y)^(0.3)) - 1L),
-                                     basis_fct = c("spline", "poly", "dummy"),
-                                     basis_num = c("spline", "poly"),
-                                     test   = c("Pillai", "Bartlett"),
-                                     ties   = c("random", "first", "last"),
-                                     ...) {
-  indeptest.factor.numeric(factor(x), y,
-     p = nlevels(x) - 1,
-     q = max(1L, floor(length(y)^(0.3)) - 1L),
-     basis_fct = c("spline", "poly", "dummy"),
-     basis_num = c("spline", "poly"),
-     test   = c("Pillai", "Bartlett"),
-     ties   = c("random", "first", "last"),
-     ...)
+indeptest.character.numeric <- function(x, y, ...) {
+  indeptest.factor.numeric(factor(x), y, ...)
 }
 
 #' @rdname indeptest
@@ -497,22 +461,8 @@ indeptest.character.numeric <- function(x, y,
 #' of the two variables.
 #'
 #' @export
-indeptest.numeric.character <- function(x, y,
-                                        p = nlevels(x) - 1,
-                                        q = max(1L, floor(length(y)^(0.3)) - 1L),
-                                        basis_fct = c("spline", "poly", "dummy"),
-                                        basis_num = c("spline", "poly"),
-                                        test   = c("Pillai", "Bartlett"),
-                                        ties   = c("random", "first", "last"),
-                                        ...) {
-  indeptest.factor.numeric(x = factor(y), y = x,
-                           p = nlevels(x) - 1,
-                           q = max(1L, floor(length(y)^(0.3)) - 1L),
-                           basis_fct = c("spline", "poly", "dummy"),
-                           basis_num = c("spline", "poly"),
-                           test   = c("Pillai", "Bartlett"),
-                           ties   = c("random", "first", "last"),
-                           ...)
+indeptest.numeric.character <- function(x, y, ...) {
+  indeptest.factor.numeric(x = factor(y), y = x, ...)
 }
 
 
@@ -546,15 +496,15 @@ print.indeptest <- function(x, ...) {
   cat(sprintf("  Basis dimensions: p = %d, q = %d\n",
               x$p, x$q))
   cat(sprintf("  Sample size     : n = %d\n", x$nobs))
-  if (!is.null(x$P_stat)) {
+  if (!is.na(x$P_stat)) {
     cat(      "  Pillai stat.    :")
     cat(sprintf(" %.4f  (p-value = %.4f)\n",
-                x$P_stat, x$P_pval))
+                x$P_stat, x$P_pvalue))
   }
-  if (!is.null(x$B_stat)){
+  if (!is.na(x$B_stat)){
     cat(      "  Bartlett stat.  :")
     cat(sprintf(" %.4f  (p-value = %.4f)\n\n",
-                x$B_stat, x$B_pval))
+                x$B_stat, x$B_pvalue))
   }
   invisible(x)
 }
