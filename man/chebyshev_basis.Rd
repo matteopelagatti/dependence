@@ -9,16 +9,27 @@ chebyshev_basis(n, p)
 \arguments{
 \item{n}{positive integer with the number of points n}
 
-\item{p}{positive integer with the degree of the polynomial}
+\item{p}{positive integer with the degree of the polynomial
+(must satisfy p < n)}
 }
 \value{
-A \eqn{n \times p} matrix with the basis vectors.
+A \eqn{n \times p} matrix with the basis vectors
+of degrees 1, ..., p (the constant is omitted).
 }
 \description{
 Computes the orthonormal polynomial basis on the grid
-1/(n+1), 2/(n+1), ..., n/(n+1) using the three-term
-recurrence. Returns an n x p matrix U such that
+1/(n+1), 2/(n+1), ..., n/(n+1) using the \emph{normalized}
+three-term recurrence. Returns an n x p matrix U such that
 (1/n) * t(U) \%\emph{\% U = I_p exactly.
 Cost: O(n}p) time, O(n*p) space.
 No QR, no Vandermonde matrix needed.
+}
+\details{
+Unlike the monic recurrence, whose values grow like (n/2)^k
+and overflow double precision for large n (e.g. n = 1e6,
+p = 62), the normalized recurrence propagates the
+orthonormal polynomials themselves, whose grid values grow
+only polynomially in the degree; the computed basis is
+orthonormal to machine precision throughout the regime
+p = o(sqrt(n)).
 }

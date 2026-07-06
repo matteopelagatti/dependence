@@ -4,16 +4,26 @@
 #' Discrete Chebyshev (Gram) polynomial basis
 #'
 #' Computes the orthonormal polynomial basis on the grid
-#' 1/(n+1), 2/(n+1), ..., n/(n+1) using the three-term
-#' recurrence. Returns an n x p matrix U such that
+#' 1/(n+1), 2/(n+1), ..., n/(n+1) using the *normalized*
+#' three-term recurrence. Returns an n x p matrix U such that
 #' (1/n) * t(U) %*% U = I_p exactly.
 #' Cost: O(n*p) time, O(n*p) space.
 #' No QR, no Vandermonde matrix needed.
 #'
+#' Unlike the monic recurrence, whose values grow like (n/2)^k
+#' and overflow double precision for large n (e.g. n = 1e6,
+#' p = 62), the normalized recurrence propagates the
+#' orthonormal polynomials themselves, whose grid values grow
+#' only polynomially in the degree; the computed basis is
+#' orthonormal to machine precision throughout the regime
+#' p = o(sqrt(n)).
+#'
 #' @param n positive integer with the number of points n
 #' @param p positive integer with the degree of the polynomial
+#'          (must satisfy p < n)
 #'
-#' @returns A \eqn{n \times p} matrix with the basis vectors.
+#' @returns A \eqn{n \times p} matrix with the basis vectors
+#'          of degrees 1, ..., p (the constant is omitted).
 #' @export
 chebyshev_basis <- function(n, p) {
     .Call(`_dependence_chebyshev_basis`, n, p)
