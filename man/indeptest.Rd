@@ -16,7 +16,7 @@ indeptest(x, y, ...)
 \method{indeptest}{numeric.numeric}(
   x,
   y,
-  p = max(1L, floor(length(x)^(0.3)) - 1L),
+  p = max(1L, floor(length(x)^(0.31)) - 1L),
   q = p,
   basis = c("poly", "spline"),
   test = c("Pillai", "Bartlett"),
@@ -40,7 +40,7 @@ indeptest(x, y, ...)
   x,
   y,
   p = nlevels(x) - 1,
-  q = max(1L, floor(length(y)^(0.3)) - 1L),
+  q = max(1L, floor(length(y)^(0.31)) - 1L),
   basis_fct = c("poly", "spline", "dummy"),
   basis_num = c("poly", "spline"),
   test = c("Pillai", "Bartlett"),
@@ -51,7 +51,7 @@ indeptest(x, y, ...)
 \method{indeptest}{numeric.factor}(
   x,
   y,
-  p = max(1L, floor(length(x)^(0.3)) - 1L),
+  p = max(1L, floor(length(x)^(0.31)) - 1L),
   q = nlevels(y) - 1,
   basis_num = c("spline", "poly"),
   basis_fct = c("spline", "poly", "dummy"),
@@ -153,7 +153,7 @@ an orthonormal polynomial or cubic B-spline basis applied to
 the ranks of \code{x} and \code{y}. The default basis
 is polynomial, and the default number of basis
 functions follows the rule
-\eqn{p = q = \max(1, \lfloor n^{0.3} \rfloor - 1)}.
+\eqn{p = q = \max(1, \lfloor n^{0.31} \rfloor - 1)}.
 
  factor vs factor:
 Both \code{x} and \code{y} are factors. Factor levels
