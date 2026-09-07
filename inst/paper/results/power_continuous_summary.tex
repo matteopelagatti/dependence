@@ -1,0 +1,21 @@
+\begin{table}
+\tbl{Size-adjusted empirical power across ten dependence schemes and twenty noise levels}{%
+\begin{tabular}{l rrr rrr rrr}
+\hline
+ & \multicolumn{3}{c}{$n = 50$} & \multicolumn{3}{c}{$n = 100$} & \multicolumn{3}{c}{$n = 200$} \\
+Test & Mean & SD & Rank & Mean & SD & Rank & Mean & SD & Rank \\
+\hline
+B_n & $0{\cdot}473$ & $0{\cdot}338$ & $3.163$ & $0{\cdot}616$ & $0{\cdot}354$ & $3.152$ & $0{\cdot}733$ & $0{\cdot}317$ & $3.375$ \\
+HHG & $0{\cdot}452$ & $0{\cdot}347$ & $3.353$ & $0{\cdot}623$ & $0{\cdot}340$ & $3.058$ & $0{\cdot}783$ & $0{\cdot}278$ & $2.748$ \\
+dCov & $0{\cdot}351$ & $0{\cdot}331$ & $3.542$ & $0{\cdot}499$ & $0{\cdot}363$ & $3.390$ & $0{\cdot}674$ & $0{\cdot}353$ & $3.245$ \\
+P_n & $0{\cdot}472$ & $0{\cdot}338$ & $3.603$ & $0{\cdot}614$ & $0{\cdot}355$ & $3.825$ & $0{\cdot}731$ & $0{\cdot}318$ & $4.010$ \\
+Genest & $0{\cdot}315$ & $0{\cdot}318$ & $4.562$ & $0{\cdot}470$ & $0{\cdot}369$ & $4.480$ & $0{\cdot}641$ & $0{\cdot}368$ & $4.133$ \\
+Hoeffding & $0{\cdot}327$ & $0{\cdot}327$ & $4.800$ & $0{\cdot}481$ & $0{\cdot}368$ & $4.588$ & $0{\cdot}650$ & $0{\cdot}368$ & $4.310$ \\
+MIC & $0{\cdot}297$ & $0{\cdot}318$ & $4.978$ & $0{\cdot}407$ & $0{\cdot}368$ & $5.508$ & $0{\cdot}489$ & $0{\cdot}389$ & $6.180$ \\
+\hline
+\end{tabular}}
+\begin{tabnote}
+Critical values are size-adjusted within each combination of scheme, noise level and sample size, from $10000$ null datasets obtained by permuting $Y$; power is over $10000$ independent draws from the alternative, so the largest standard error is $0{\cdot}005$. Orders follow rule (12), giving $p=q=2, 3, 4$. The mean rank is the average rank, with one the best, within each combination.
+\end{tabnote}
+\label{tab:power_summary}
+\end{table}
