@@ -362,15 +362,42 @@ DF_NAMES  <- names(RI)[RI]; CELL_NAMES <- names(RI)[!RI]
 PQ <- unique(do.call(rbind, lapply(N_GRID, function(n)
   do.call(rbind, lapply(unique(c(p_rule(n), if (SECONDARY_Q1) 1L)),
                         function(q) c(n, p_rule(n), q))))))
-NCELL <- length(N_GRID) * length(gen) * length(NU) *
-  (1L + as.integer(SECONDARY_Q1) * length(FUNCTIONAL) / length(gen))
-proj <- data.frame(test = KEEP, secs = as.numeric(SECS[KEEP]), stringsAsFactors = FALSE)
-proj$evals <- vapply(KEEP, function(t)
-  NCELL * cap_for(t, R1) +
-    if (RI[t]) nrow(PQ) * cap_for(t, R0_DF) else NCELL * cap_for(t, R0), 0)
-proj$hours <- proj$secs * proj$evals / 3600
+## Timed at EVERY sample size, not only the smallest.  BET and BEAST grow
+## with n AND with the binary depth, and d_rule raises the depth from 2 to 3
+## between n = 50 and n = 100, multiplying the number of interactions by four
+## on top of the growth in n.  A projection from the n = 50 timing alone
+## understates them by an order of magnitude, which is exactly the regime in
+## which one discovers the problem three days into the run.
+time_adapters <- function(n, reps = 5L) {
+  S <- make_stats()[KEEP]; p <- p_rule(n)
+  set.seed(4242L)
+  vapply(KEEP, function(k) {
+    t0 <- Sys.time()
+    for (r in seq_len(reps)) {
+      x <- runif(n); y <- x + 0.5*rnorm(n)
+      try(S[[k]](x, y, p, p), silent = TRUE)
+    }
+    as.numeric(difftime(Sys.time(), t0, units = "secs")) / reps
+  }, 0)
+}
+message("\nseconds per evaluation, at each sample size:")
+TIM <- sapply(N_GRID, time_adapters)
+if (is.null(dim(TIM))) TIM <- matrix(TIM, nrow = length(KEEP), dimnames = list(KEEP, NULL))
+colnames(TIM) <- paste0("n=", N_GRID)
+print(signif(TIM, 3))
+
+CELLS_PER_N <- length(gen) * length(NU) *
+  (1 + as.integer(SECONDARY_Q1) * length(FUNCTIONAL) / length(gen))
+proj <- data.frame(test = KEEP, stringsAsFactors = FALSE)
+proj$hours <- vapply(KEEP, function(t)
+  sum(vapply(seq_along(N_GRID), function(j) {
+    nq <- length(unique(c(p_rule(N_GRID[j]), if (SECONDARY_Q1) 1L)))
+    nulls <- if (RI[t]) nq * cap_for(t, R0_DF) else CELLS_PER_N * cap_for(t, R0)
+    TIM[t, j] * (CELLS_PER_N * cap_for(t, R1) + nulls)
+  }, 0)) / 3600, 0)
+proj$share <- proj$hours / sum(proj$hours)
 proj <- proj[order(-proj$hours), ]
-message("\nprojected cost, from the self-test timings:")
+message("\nprojected cost, from the per-n timings above:")
 print(proj, row.names = FALSE, digits = 3)
 message(sprintf("total %.1f single-core hours, %.1f h on %d cores",
                 sum(proj$hours), sum(proj$hours)/NCORES, NCORES))
