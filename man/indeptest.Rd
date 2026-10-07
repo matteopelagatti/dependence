@@ -20,7 +20,7 @@ indeptest(x, y, ...)
   q = p,
   basis = c("poly", "spline"),
   test = c("Pillai", "Bartlett"),
-  ties = c("random", "first", "last"),
+  ties = c("random", "first", "last", "average"),
   ...
 )
 
@@ -44,7 +44,7 @@ indeptest(x, y, ...)
   basis_fct = c("poly", "spline", "dummy"),
   basis_num = c("poly", "spline"),
   test = c("Pillai", "Bartlett"),
-  ties = c("random", "first", "last"),
+  ties = c("random", "first", "last", "average"),
   ...
 )
 
@@ -56,7 +56,7 @@ indeptest(x, y, ...)
   basis_num = c("spline", "poly"),
   basis_fct = c("spline", "poly", "dummy"),
   test = c("Pillai", "Bartlett"),
-  ties = c("random", "first", "last"),
+  ties = c("random", "first", "last", "average"),
   ...
 )
 
@@ -73,10 +73,15 @@ as \code{x}.}
 \item{...}{Additional arguments passed to the appropriate method.}
 
 \item{p}{Integer. Number of basis functions for \code{x}.
-Defaults depend on the types of the variables.}
+Defaults depend on the types of the variables. It is
+reduced to the number of distinct values of \code{x}
+minus one whenever it exceeds that bound, since the
+expansion cannot have larger rank; a warning is issued
+only if the value was supplied by the user.}
 
 \item{q}{Integer. Number of basis functions for \code{y}.
-Defaults depend on the types of the variables.}
+Defaults depend on the types of the variables, and are
+capped as described for \code{p}.}
 
 \item{basis}{Character string specifying the type of basis functions
 (\code{"poly"}, \code{"spline"}, or \code{"dummy"}, the latter being
@@ -87,8 +92,12 @@ valid only for factors).}
 Selects the test statistics to compute.}
 
 \item{ties}{Method to manage ties in numeric variables: choose among
-\code{"random"}, \code{"first"}, or \code{"last"}. Corresponds to the
-\code{ties.method} parameter in the \code{rank()} function.}
+\code{"random"}, \code{"first"}, \code{"last"}, or \code{"average"}.
+Corresponds to the \code{ties.method} parameter in the \code{rank()} function.
+Only \code{"average"}, or any other convention giving tied observations a
+common rank, makes the numeric encoding of a categorical variable
+equivalent to its one-hot encoding; the other choices let the arbitrary
+ordering within a group of ties enter the statistic.}
 
 \item{basis_fct}{Character string specifying the type of basis functions
 for factor variables (\code{"poly"}, \code{"spline"}, or \code{"dummy"}).}
@@ -128,11 +137,13 @@ method used depends on the types of the two variables:
 \item \strong{numeric vs numeric}: orthonormal basis
 expansion test based on canonical correlations
 between polynomial or B-spline bases applied
-to the ranks of \code{x} and \code{y}.
+to the ranks of \code{x} and \code{y}. Integer
+vectors are treated as numeric.
 \item \strong{factor vs factor}: same test with
 polynomial encoding of factor levels; equivalent
 to a chi-square test of association on the
-contingency table.
+contingency table. Logical and character vectors
+are converted to factors.
 \item \strong{factor vs numeric} (and the symmetric
 case): mixed encoding, with a polynomial basis
 for the factor and a spline or polynomial basis
@@ -148,12 +159,20 @@ respectively.
 }
 \section{Method}{
  numeric vs numeric:
-Both \code{x} and \code{y} are numeric. The test uses
-an orthonormal polynomial or cubic B-spline basis applied to
-the ranks of \code{x} and \code{y}. The default basis
+Both \code{x} and \code{y} are numeric, integer vectors being treated as
+numeric. The test uses an orthonormal polynomial or cubic B-spline basis
+applied to the ranks of \code{x} and \code{y}. The default basis
 is polynomial, and the default number of basis
 functions follows the rule
 \eqn{p = q = \max(1, \lfloor n^{0.31} \rfloor - 1)}.
+Each order is then reduced, if necessary, to the number of distinct values
+of the corresponding variable minus one. A variable with few distinct
+values is therefore handled correctly without being declared a factor: with
+\code{ties = "average"} and the resulting order, the polynomial expansion
+spans the same space as the one-hot encoding and the two give the identical
+statistic. When tied observations share a rank the design matrices are no
+longer row permutations of the basis, so they are centred and whitened
+explicitly before the canonical correlations are computed.
 
  factor vs factor:
 Both \code{x} and \code{y} are factors. Factor levels
@@ -176,7 +195,11 @@ polynomial basis with \eqn{K_x - 1} functions is used
 for \code{x}, where \eqn{K_x} is the number of levels
 of \code{x}. For \code{y}, a polynomial or B-spline
 basis is used with \code{q} functions as in the
-numeric vs numeric method.
+numeric vs numeric method. Both orders are reduced, if
+necessary, to the number of distinct values of the
+corresponding variable minus one. When \code{y} has ties and these are
+given a common rank, its design matrix is centred and orthonormalised
+explicitly, since it is then no longer a row permutation of the basis.
 
  numeric vs factor:
 \code{x} is numeric and \code{y} is a factor. This is
@@ -208,6 +231,13 @@ indeptest(x_f, y_f)
 
 ## factor vs numeric
 indeptest(x_f, y)
+
+## integer codes of a nominal variable: with average ranks the numeric
+## method reproduces the one-hot encoding exactly
+x_i <- as.integer(x_f)
+y_i <- as.integer(y_f)
+indeptest(x_i, y_i, ties = "average")
+indeptest(x_f, y_f, basis = "dummy")
 
 }
 \references{
