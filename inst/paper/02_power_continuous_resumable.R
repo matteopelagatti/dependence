@@ -148,6 +148,80 @@ gen <- list(
                                     list(x = x, y = rnorm(n)*x + nu*rnorm(n)) }
 )
 
+## ---------------------- three further schemes ------------------------
+## Added October 2026, to close gaps the referee round exposed.  Set
+## EXTRA_SCHEMES to FALSE to reproduce the original ten exactly.  Each adds
+## 60 cells to the 600, so all three cost about thirty per cent more.
+##
+##  lattice        The clustered alternative in the BEAST paper's own
+##                 bivariate design is a checkerboard, and it is the one case
+##                 there in which BEAST is NOT the top performer, the
+##                 chi-squared test being strongest.  Nothing among the ten
+##                 has that structure.  The version here is a balanced 4 x 4
+##                 lattice, two occupied cells in every row and column,
+##                 arranged so that E[j | i] is the same for every i: margins
+##                 exactly uniform, and Pearson, Spearman and Kendall
+##                 correlation all zero, verified numerically at 4 x 10^5
+##                 draws (0.002, 0.002, -0.009).  Every rank-correlation
+##                 method is therefore powerless against it by construction.
+##
+##                 NOTE, because it affects how the result should be read:
+##                 the naive checkerboard, mass where i + j is even, is NOT
+##                 uncorrelated -- it has Spearman 0.19 at this resolution --
+##                 which is why the occupied cells are listed explicitly.
+##                 And this lattice is NOT a case where a binary basis should
+##                 beat a smooth one: its dependence runs in the
+##                 inner-versus-outer direction, and corr{(x-1/2)^2,
+##                 (y-1/2)^2} = -0.70, so the quadratic basis function
+##                 captures it almost completely and even p = q = 2 should do
+##                 well.  Expect to win here.  For a lattice that genuinely
+##                 defeats a low-order smooth basis the resolution has to
+##                 rise, which needs care to keep the rank correlations at
+##                 zero; the high-frequency sine below covers that regime in
+##                 the functional direction instead.
+##
+##  sine 8pi       The existing sine scheme is sin(4 pi x), two cycles.  A
+##                 low-order smooth basis is blind to high-frequency
+##                 departures by construction -- Proposition 1 says the
+##                 noncentrality is the captured energy, which is near zero
+##                 when the direction lies outside the span -- and this is
+##                 precisely the regime BET, BEAST and Chatterjee's xi are
+##                 built for.  Expect to lose here.  That is the point:
+##                 after a rejection for not establishing when the test
+##                 should be preferred, a design that omits its known worst
+##                 case reads as evasion, whereas losing and explaining why,
+##                 with the remedy (raise p), is the theory doing its job.
+##
+##  Clayton        Monotone dependence concentrated in the lower tail.  None
+##                 of the ten has tail dependence: "linear" is the only
+##                 monotone scheme and its copula is light-tailed.  Sampled
+##                 by conditional inversion at Kendall's tau = 1/3, then
+##                 given the same additive noise as the rest so that the
+##                 noise index keeps its meaning across schemes.
+EXTRA_SCHEMES <- TRUE
+if (EXTRA_SCHEMES) {
+  gen[["lattice"]] <- function(n, nu) {
+    ## Occupied cells: i in {1,4} pairs with j in {2,3}, i in {2,3} with
+    ## j in {1,4}.  Two per row, two per column, and E[j | i] = 2.5 for all i,
+    ## which is what makes every rank correlation vanish.
+    i <- sample.int(4L, n, replace = TRUE)
+    j <- ifelse(i == 1L | i == 4L, sample(c(2L, 3L), n, TRUE),
+                                   sample(c(1L, 4L), n, TRUE))
+    x <- (i - runif(n)) / 4                          # exactly uniform margins
+    y <- (j - runif(n)) / 4
+    list(x = x, y = y + nu*rnorm(n, 0, 0.15))
+  }
+  gen[["sine 8pi"]] <- function(n, nu) {
+    x <- runif(n); list(x = x, y = sin(8*pi*x) + nu*rnorm(n, 0, 2))
+  }
+  gen[["Clayton"]] <- function(n, nu, theta = 1) {    # tau = theta/(theta+2)
+    u <- runif(n); w <- runif(n)
+    v <- ((w^(-theta/(1+theta)) - 1) * u^(-theta) + 1)^(-1/theta)
+    list(x = u, y = v + nu*rnorm(n, 0, 0.3))
+  }
+  FUNCTIONAL <- c(FUNCTIONAL, "sine 8pi")            # a location relation
+}
+
 ## ------------------------- statistic adapters ------------------------
 ## Tolerant accessor for packages that return a test object rather than a
 ## statistic.  Take the object if it is already one finite number, else the
