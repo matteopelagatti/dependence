@@ -103,8 +103,13 @@ FUNCTIONAL <- c("linear", "quadratic", "cubic", "sine", "fourth root")
 ## of directions and neither is favoured by the tuning.
 d_rule <- function(n) max(2L, min(4L, as.integer(floor(log2(n) / 2))))
 
+## Always returns an INTEGER count.  R0, R0_DF and R1 are written as 5e3,
+## 2e4, 1e4, which are doubles, so returning the default unchanged made the
+## three vapply(..., 0L, ...) calls below fail: vapply coerces integer up to
+## double but never double down to integer.
 cap_for <- function(nm, default)
-  if (is.null(EVAL_CAP[[nm]])) default else min(default, as.integer(EVAL_CAP[[nm]]))
+  as.integer(if (is.null(EVAL_CAP[[nm]])) default
+             else min(default, as.integer(EVAL_CAP[[nm]])))
 
 ## Some statistics consume random numbers of their own: BEAST resamples to
 ## build its adaptive weights, and the Genest adapter runs a bootstrap at
