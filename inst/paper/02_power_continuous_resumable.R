@@ -160,6 +160,10 @@ gen <- list(
 ##   set.seed(1); X <- cbind(runif(100), runif(100))
 ##   str(BET::BET(X, d = 3)); str(BET::BEAST(X, d = 3))
 ##   str(HHG::hhg.univariate.ind.stat(X[,1], X[,2], variant = "ADP-EQP-ML"))
+## Pseudo-observations, in the same convention as indeptest: ties broken by
+## order of appearance, divisor n + 1 so the values stay inside (0, 1).
+pseudo <- function(x) rank(x, ties.method = "first") / (length(x) + 1)
+
 pluck1 <- function(obj, fields) {
   if (is.numeric(obj) && length(obj) == 1L && is.finite(obj)) return(as.numeric(obj))
   for (f in fields) {
@@ -198,10 +202,20 @@ make_stats <- function() {
     ## smooth, and the aggregation is a maximum over interactions rather
     ## than a sum over a chosen span.  The comparison reads as binary versus
     ## smooth basis at matched resolution, which is the honest framing.
+    ##
+    ## The package exports no function called BET: the fixed-depth test is
+    ## MaxBET, whose depth argument is dep, and the statistic is the extreme
+    ## asymmetry.  Pseudo-observations are passed explicitly with
+    ## unif.margin = TRUE rather than letting the package apply its own
+    ## empirical distribution transform, for three reasons: it is the same
+    ## rank convention as indeptest, ties.method = "first" and divisor n + 1,
+    ## so the two tests see exactly the same input; it makes the statistic
+    ## rank-invariant by construction rather than by assumption; and it
+    ## sidesteps the margin handling that BEAST stumbles over below.
     s$BET <- function(x, y, p, q)
-      pluck1(BET::BET(cbind(x, y), d = d_rule(length(x))),
-             c("Statistic", "statistic", "Extreme.Asymmetry",
-               "extreme.asymmetry", "Max.Asymmetry", "bet.s"))
+      pluck1(BET::MaxBET(cbind(pseudo(x), pseudo(y)), dep = d_rule(length(x)),
+                         unif.margin = TRUE, asymptotic = TRUE),
+             c("Extreme.Asymmetry", "z.statistic"))
 
     ## BEAST, the adaptive-weight version, designed for near-uniform power
     ## and the most likely of the four to beat us somewhere.  If it does,
@@ -210,9 +224,15 @@ make_stats <- function() {
     ## build its weights, so its value is random given the data; that extra
     ## variability belongs to the method, not to this harness, and it is why
     ## detect_rank_invariant() sets a common seed before each of its calls.
+    ## method = "stat" returns the statistic without building the null
+    ## distribution, which is what this harness calibrates for itself; it
+    ## skips the B = 100 permutations and is the difference between BEAST
+    ## being affordable and not.  The subsampling that forms the adaptive
+    ## weights remains, so the value is still random given the data.
     s$BEAST <- function(x, y, p, q)
-      pluck1(BET::BEAST(cbind(x, y), d = d_rule(length(x))),
-             c("BEAST.Statistic", "beast.statistic", "Statistic", "statistic"))
+      pluck1(BET::BEAST(cbind(pseudo(x), pseudo(y)), dep = d_rule(length(x)),
+                        unif.margin = TRUE, method = "stat"),
+             c("BEAST.Statistic", "Statistic", "statistic"))
 
     ## Chatterjee's xi, ASYMMETRIC by construction, so the symmetrised
     ## maximum is the fair comparison for a test of independence.  Shi,
@@ -268,6 +288,34 @@ detect_rank_invariant <- function(n = 100L, p = 3L, q = 3L, reps = 3L, tol = 1e-
   ok
 }
 
+## Orientation check.  Every adapter must return a LARGER value under strong
+## dependence than under independence.  An interface that yields a p-value
+## instead of a statistic, or a statistic oriented the other way, passes
+## self_test() -- it returns one finite number -- and then silently produces
+## near-zero power for the rest of the study, which looks like a result
+## rather than a bug.  This is the check that catches it.  pluck1() makes the
+## risk real, since it will happily return a p-value field if the statistic
+## field is absent under the installed version.
+orientation_check <- function(n = 200L, p = 3L, q = 3L, reps = 20L) {
+  S <- make_stats(); nm <- names(S)
+  dep <- ind <- matrix(NA_real_, reps, length(S), dimnames = list(NULL, nm))
+  for (r in seq_len(reps)) {
+    set.seed(5000L + r)
+    xd <- runif(n); yd <- xd + 0.1*rnorm(n)      # strong dependence
+    xi <- runif(n); yi <- runif(n)               # independence
+    for (k in nm) {
+      dep[r, k] <- tryCatch(as.numeric(S[[k]](xd, yd, p, q)), error = function(e) NA_real_)
+      ind[r, k] <- tryCatch(as.numeric(S[[k]](xi, yi, p, q)), error = function(e) NA_real_)
+    }
+  }
+  md <- colMeans(dep, na.rm = TRUE); mi <- colMeans(ind, na.rm = TRUE)
+  ok <- is.finite(md) & is.finite(mi) & md > mi
+  for (k in nm) message(sprintf("  %-10s dependent %-12.6g independent %-12.6g  %s",
+    k, md[k], mi[k],
+    if (isTRUE(ok[k])) "ok" else "WRONG ORIENTATION -- probably a p-value, not a statistic"))
+  ok
+}
+
 self_test <- function(n, p, q) {
   set.seed(1); x <- runif(n); y <- x + 0.5*rnorm(n)
   S <- make_stats(); ok <- logical(length(S)); names(ok) <- names(S)
@@ -291,6 +339,17 @@ SECS    <- attr(STAT_OK, "secs")
 if (!all(STAT_OK)) warning("dropping: ", paste(names(STAT_OK)[!STAT_OK], collapse = ", "))
 KEEP <- names(STAT_OK)[STAT_OK]
 SECS <- SECS[KEEP]
+stopifnot("B_n must be available" = "B_n" %in% KEEP)
+
+message("\norientation check (larger must mean more dependence):")
+ORIENT <- orientation_check()[KEEP]
+if (!all(ORIENT)) {
+  warning("dropping wrongly oriented adapters: ",
+          paste(KEEP[!ORIENT], collapse = ", "),
+          ". Either the accessor is returning a p-value, in which case negate it, ",
+          "or the candidate list in pluck1() is picking the wrong field.")
+  KEEP <- KEEP[ORIENT]; SECS <- SECS[KEEP]
+}
 stopifnot("B_n must be available" = "B_n" %in% KEEP)
 
 message("\nrank-invariance detection (distribution-free under H0):")
@@ -428,7 +487,7 @@ if (length(todo)) {
                   todo[[1]]$n, dt, length(todo)-1, dt*(length(todo)-1)/3600/NCORES, NCORES))
   cl <- makeCluster(NCORES)
   clusterExport(cl, c("gen","make_stats","run_cell","cell_file","cell_done","pluck1",
-                      "with_frozen_rng","N_GRID","R0","R0_DF","R1","ALPHA","SEED",
+                      "pseudo","with_frozen_rng","N_GRID","R0","R0_DF","R1","ALPHA","SEED",
                       "USE_MIC","USE_NEW","p_rule","d_rule","cap_for","EVAL_CAP",
                       "KEEP","DF_NAMES","CELL_NAMES","crit_df_table","OUTDIR"))
   invisible(clusterEvalQ(cl, library(dependence)))
