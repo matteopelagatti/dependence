@@ -1,0 +1,25 @@
+\begin{table}
+\tbl{Size-adjusted empirical power across ten dependence schemes and twenty noise levels}{%
+\begin{tabular}{l rrr rrr rrr}
+\hline
+ & \multicolumn{3}{c}{$n = 50$} & \multicolumn{3}{c}{$n = 100$} & \multicolumn{3}{c}{$n = 200$} \\
+Test & Mean & SD & Rank & Mean & SD & Rank & Mean & SD & Rank \\
+\hline
+HHG\_fast & $0{\cdot}429$ & $0{\cdot}339$ & $3.727$ & $0{\cdot}631$ & $0{\cdot}342$ & $3.396$ & $0{\cdot}768$ & $0{\cdot}291$ & $3.671$ \\
+B\_n & $0{\cdot}462$ & $0{\cdot}340$ & $3.917$ & $0{\cdot}598$ & $0{\cdot}357$ & $4.313$ & $0{\cdot}715$ & $0{\cdot}331$ & $4.781$ \\
+HHG & $0{\cdot}434$ & $0{\cdot}340$ & $4.694$ & $0{\cdot}612$ & $0{\cdot}347$ & $4.212$ & $0{\cdot}769$ & $0{\cdot}300$ & $3.610$ \\
+P\_n & $0{\cdot}460$ & $0{\cdot}340$ & $4.850$ & $0{\cdot}596$ & $0{\cdot}357$ & $4.921$ & $0{\cdot}713$ & $0{\cdot}332$ & $5.408$ \\
+dCov & $0{\cdot}330$ & $0{\cdot}324$ & $5.158$ & $0{\cdot}478$ & $0{\cdot}363$ & $5.094$ & $0{\cdot}656$ & $0{\cdot}365$ & $4.675$ \\
+BEAST & $0{\cdot}342$ & $0{\cdot}311$ & $6.492$ & $0{\cdot}455$ & $0{\cdot}360$ & $7.179$ & $0{\cdot}642$ & $0{\cdot}351$ & $6.037$ \\
+MIC & $0{\cdot}284$ & $0{\cdot}299$ & $6.625$ & $0{\cdot}408$ & $0{\cdot}363$ & $6.865$ & $0{\cdot}501$ & $0{\cdot}386$ & $7.804$ \\
+xi & $0{\cdot}290$ & $0{\cdot}293$ & $6.792$ & $0{\cdot}379$ & $0{\cdot}332$ & $7.275$ & $0{\cdot}470$ & $0{\cdot}359$ & $8.783$ \\
+Genest & $0{\cdot}296$ & $0{\cdot}310$ & $6.808$ & $0{\cdot}455$ & $0{\cdot}366$ & $5.975$ & $0{\cdot}628$ & $0{\cdot}377$ & $5.558$ \\
+Hoeffding & $0{\cdot}305$ & $0{\cdot}318$ & $6.979$ & $0{\cdot}469$ & $0{\cdot}367$ & $6.129$ & $0{\cdot}639$ & $0{\cdot}376$ & $5.594$ \\
+BET & $0{\cdot}196$ & $0{\cdot}265$ & $9.958$ & $0{\cdot}215$ & $0{\cdot}317$ & $10{\cdot}640$ & $0{\cdot}360$ & $0{\cdot}397$ & $10{\cdot}081$ \\
+\hline
+\end{tabular}}
+\begin{tabnote}
+Critical values are size-adjusted from $5000$ null datasets per cell, obtained by permuting $Y$, except for the statistics depending on the data only through the ranks, which are distribution-free under independence and are calibrated once per $(n,p,q)$ from $20000$ null datasets. Power is over $10000$ independent draws from the alternative, so the largest standard error is $0{\cdot}005$. Orders follow rule (12), giving $p=q=2, 3, 4$; the binary expansion depth for BET and BEAST is $d=2, 3, 3$, matched to the number of directions examined. The mean rank is the average rank, one being best, within each combination.
+\end{tabnote}
+\label{tab:power_summary}
+\end{table}
