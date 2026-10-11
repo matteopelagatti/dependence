@@ -1,0 +1,88 @@
+% =====================================================================
+%  Replacement narrative for Section 5.1 (continuous variables).
+%
+%  NOTE BEFORE USE: BET is absent from every number below because its
+%  adapter is returning a quantity anti-correlated with dependence on the
+%  symmetric schemes -- 37 per cent of its cells fall below a rejection
+%  rate of 0.03 at a nominal 0.05, and on the circle its power RISES from
+%  0.003 to 0.012 as the dependence weakens.  Once the adapter is fixed
+%  and BET re-run, rebuild the tables and figures and reinstate it here.
+%  The associate editor named BET explicitly, so it cannot be left out of
+%  the submitted version.
+% =====================================================================
+
+We compared $B_n$ with ten competitors on thirteen continuous dependence
+schemes, each indexed by a noise standard deviation ranging from $0{\cdot}1$
+to $2{\cdot}0$ in steps of $0{\cdot}1$, at $n = 50$, $100$ and $200$, with
+orthogonal polynomials, orders from rule~(12) and $10^4$ replications per
+configuration. Ten of the schemes are those of the earlier literature
+\citep{New09, Hel13, Sim14, Rud17}; three are added here. The \textit{lattice}
+is a balanced $4\times4$ pattern with exactly uniform margins in which every
+rank correlation vanishes identically, so that dependence is visible only once
+the unit square is resolved; \textit{sine 8pi} quadruples the frequency of the
+sine scheme, and is included because a low-order smooth span is blind to
+high-frequency departures by construction and the design should contain the
+case the method is worst at; and \textit{Clayton} supplies the lower-tail
+dependence that none of the ten possessed. All critical values are
+size-adjusted, taken from $2\times10^4$ null datasets per $(n,p,q)$ for the
+statistics that depend on the data only through the ranks, and from
+$5\times10^3$ permuted datasets per configuration for distance covariance and
+HHG, which do not.
+
+Table~\ref{tab:power_summary} reports the mean over the $260$ configurations at
+each sample size and Fig.~\ref{fig:power} the full profiles. At $n = 50$, $B_n$
+has the highest mean power of any test considered, $0{\cdot}462$ against
+$0{\cdot}434$ for HHG and $0{\cdot}429$ for its atoms-based variant; at
+$n = 100$ it is within $0{\cdot}033$ of the leader, and at $n = 200$ HHG leads
+by $0{\cdot}054$. The ordering among the remaining competitors is stable, with
+distance covariance, Hoeffding's statistic and the Cram\'er--von Mises
+statistic of \citet{Gen19} within $0{\cdot}03$ of one another throughout, and
+the maximal information coefficient and Chatterjee's $\xi$ trailing by a
+further margin that widens with $n$.
+
+What the averages conceal is that the tests are not competing on a common
+axis, and the scheme-by-scheme profile is the more informative comparison.
+$B_n$ is the most powerful test on every scheme in which the dependence is
+neither monotone nor of high frequency. On the circle at $n = 100$ it rejects
+with mean probability $0{\cdot}556$ against $0{\cdot}540$ for the nearest
+competitor and $0{\cdot}078$ for distance covariance; on the lattice,
+$0{\cdot}797$ against $0{\cdot}239$, $0{\cdot}264$ and $0{\cdot}216$ for
+distance covariance, Hoeffding and \citet{Gen19} respectively, those three
+being close to powerless by construction, since the lattice has no rank
+correlation to detect. At $n = 50$ it leads on five of the thirteen schemes
+and by margins of $0{\cdot}10$ to $0{\cdot}13$ on the structured ones.
+
+The cases in which $B_n$ trails are equally systematic, and
+Proposition~\ref{prop:lp_fixed} accounts for both of them exactly. The first is
+monotone dependence: on the linear, Clayton, fourth-root and two-curves
+schemes the departure is essentially one-dimensional, so the whole
+noncentrality sits in the single coefficient $\theta_{11}$ while the test
+spends $pq$ degrees of freedom and pays a critical value of order $pq$ for
+them. On the linear scheme at $n = 200$, distance covariance attains
+$0{\cdot}850$ against $0{\cdot}625$ for $B_n$. The remedy is in the theory
+rather than outside it: with $p = q = 1$ the statistic is a monotone function
+of Spearman's correlation and the deficit disappears, so what the table
+measures is the price of not knowing in advance that the relation is monotone.
+The second is high frequency: on the sine schemes the direction of departure
+lies largely outside the span at $p = q = 3$, the captured energy
+$\|\Pi_{pq}g\|^2$ is small, and the noncentrality with it. On \textit{sine 8pi}
+at $n = 200$, $B_n$ reaches $0{\cdot}231$ against $0{\cdot}494$ for the
+maximal information coefficient. Here too the span is the instrument: raising
+the orders restores the power, at the cost of degrees of freedom elsewhere,
+which is the trade-off \S\ref{sec:localpower} describes and
+\S\,S4.4 of the Supplementary Material quantifies.
+
+Two further observations bear on how the table should be read. First, the
+relative standing of $B_n$ is strongest at the smallest sample size and
+weakens as $n$ grows, because rule~(12) lets the span grow only as $n^{0{\cdot}31}$,
+giving $p = q = 4$ at $n = 200$; the comparison at $n = 200$ is therefore
+between a competitor using the whole sample and a test deliberately restricted
+to sixteen directions. Second, of the eleven statistics only $B_n$ and $P_n$
+carry a reference distribution in closed form. Distance covariance and HHG are
+not distribution-free at all and were calibrated here by permutation within
+every configuration, a cost borne by this study rather than by the tests as
+reported; in an application that calibration is the user's to pay, and
+\S\ref{sec:computation} shows what it amounts to. At $n = 10^4$ a single
+evaluation of the HHG statistic takes $123$ seconds against $0{\cdot}007$ for
+$B_n$, before any permutation at all. The comparison on power is close; the
+comparison on what it costs to obtain a $p$-value is not.

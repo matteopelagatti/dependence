@@ -1,0 +1,24 @@
+\begin{table}
+\tbl{Mean size-adjusted power over the thirteen continuous dependence schemes and twenty noise levels}{%
+\begin{tabular}{l rr rr rr}
+\hline
+ & \multicolumn{2}{c}{$n = 50$} & \multicolumn{2}{c}{$n = 100$} & \multicolumn{2}{c}{$n = 200$} \\
+Test & Mean & SD & Mean & SD & Mean & SD \\
+\hline
+HHG & $0{\cdot}434$ & $0{\cdot}340$ & $0{\cdot}612$ & $0{\cdot}347$ & $0{\cdot}769$ & $0{\cdot}300$ \\
+HHG-fast & $0{\cdot}429$ & $0{\cdot}339$ & $0{\cdot}631$ & $0{\cdot}342$ & $0{\cdot}768$ & $0{\cdot}291$ \\
+$B_n$ & $0{\cdot}462$ & $0{\cdot}340$ & $0{\cdot}598$ & $0{\cdot}357$ & $0{\cdot}715$ & $0{\cdot}331$ \\
+$P_n$ & $0{\cdot}460$ & $0{\cdot}340$ & $0{\cdot}596$ & $0{\cdot}357$ & $0{\cdot}713$ & $0{\cdot}332$ \\
+dCov & $0{\cdot}330$ & $0{\cdot}324$ & $0{\cdot}478$ & $0{\cdot}363$ & $0{\cdot}656$ & $0{\cdot}365$ \\
+BEAST & $0{\cdot}342$ & $0{\cdot}311$ & $0{\cdot}455$ & $0{\cdot}360$ & $0{\cdot}642$ & $0{\cdot}351$ \\
+Hoeffding & $0{\cdot}305$ & $0{\cdot}318$ & $0{\cdot}469$ & $0{\cdot}367$ & $0{\cdot}639$ & $0{\cdot}376$ \\
+Genest & $0{\cdot}296$ & $0{\cdot}310$ & $0{\cdot}455$ & $0{\cdot}366$ & $0{\cdot}628$ & $0{\cdot}377$ \\
+MIC & $0{\cdot}284$ & $0{\cdot}299$ & $0{\cdot}408$ & $0{\cdot}363$ & $0{\cdot}501$ & $0{\cdot}386$ \\
+$\xi$ & $0{\cdot}290$ & $0{\cdot}293$ & $0{\cdot}379$ & $0{\cdot}332$ & $0{\cdot}470$ & $0{\cdot}359$ \\
+\hline
+\end{tabular}}
+\begin{tabnote}
+Each entry averages the size-adjusted rejection rate over the thirteen schemes and the twenty noise levels, $260$ configurations in all. Critical values come from $2\times10^4$ null datasets per $(n,p,q)$ for the statistics that depend on the data only through the ranks, and from $5\times10^3$ permuted datasets per configuration for distance covariance and HHG, which do not; power is over $10^4$ draws from each alternative, so the largest standard error of a single rejection rate is $0{\cdot}005$. Orders follow rule (12), giving $p=q=2,3,4$. SD is the spread across the $260$ configurations, not a standard error.
+\end{tabnote}
+\label{tab:power_summary}
+\end{table}
