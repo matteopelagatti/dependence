@@ -643,6 +643,15 @@ cell_seed <- function(n, si, nu, q)
 cell_file <- function(cell) file.path(OUTDIR,
   sprintf("cell_n%d_s%02d_nu%03d_q%d.rds", cell$n, cell$si, round(cell$nu*100), cell$q))
 
+## The results directory is SHARED with the contingency study, whose cells
+## are named cell_<k>x<k>_n*_rho*.rds, so every pattern that selects cells
+## must match this study's and nothing else.  A loose "cell, dot, rds"
+## pattern matches 80 of theirs too, and their data frames carry dim and
+## rho where these carry scheme and nu, so the assembling rbind() would
+## either fail or splice two studies into one table.  One pattern,
+## defined beside the formatter that produces the names, used everywhere.
+CELL_PAT <- "^cell_n[0-9]+_s[0-9]+_nu[0-9]+_q[0-9]+\\.rds$"
+
 ## ------------------ fingerprint of a cell's data stream ---------------
 ## A rejection rate out of R1 is a coarse summary: a change to a generator
 ## small enough to flip no rejection at all would pass a check based on it.
@@ -745,8 +754,8 @@ if ("B_scan" %in% KEEP) stopifnot(
 message(sprintf("  per-cell calibration applies to %d statistic(s): %s",
                 length(CELL_NAMES),
                 if (length(CELL_NAMES)) paste(CELL_NAMES, collapse = ", ") else "none"))
-if (length(list.files(OUTDIR, "^cell_.*rds$"))) {
-  ex <- tryCatch(readRDS(file.path(OUTDIR, list.files(OUTDIR, "^cell_.*rds$")[1])),
+if (length(list.files(OUTDIR, CELL_PAT))) {
+  ex <- tryCatch(readRDS(file.path(OUTDIR, list.files(OUTDIR, CELL_PAT)[1])),
                  error = function(e) NULL)
   if (!is.null(ex)) {
     ## The replication counts stored in the cells are the ones the cells were
@@ -940,9 +949,18 @@ for (n in N_GRID) for (si in seq_along(gen)) for (nu in NU) {
 }
 cells <- cells[order(-vapply(cells, function(z) z$n, 0))]   # expensive first
 done  <- vapply(cells, cell_done, TRUE, keep = KEEP)
+## cell_done() treats an unreadable file as not done, so a damaged cell is
+## recomputed rather than crashing the run -- but it is worth saying so out
+## loud, since the cause is usually disk or a copy that went wrong, and a
+## silent recomputation looks like the cache having been invalidated.
+.bad <- Filter(function(f) is.null(tryCatch(readRDS(f), error = function(e) NULL)),
+               list.files(OUTDIR, CELL_PAT, full.names = TRUE))
+if (length(.bad))
+  message(sprintf("  %d cell file(s) could not be read and will be recomputed: %s",
+                  length(.bad), paste(basename(.bad), collapse = ", ")))
 message(sprintf("\n%d cells, %d already done with the current statistics, %d to run, %d cores",
                 length(cells), sum(done), sum(!done), NCORES))
-if (sum(done) == 0 && length(list.files(OUTDIR, "^cell_.*rds$")))
+if (sum(done) == 0 && length(list.files(OUTDIR, CELL_PAT)))
   message("  (existing cells predate the new competitors and will be recomputed)")
 
 todo <- cells[!done]
@@ -953,7 +971,7 @@ if (length(todo)) {
                   todo[[1]]$n, dt, length(todo)-1, dt*(length(todo)-1)/3600/NCORES, NCORES))
   cl <- makeCluster(NCORES)
   clusterExport(cl, c("gen","make_stats","run_cell","cell_file","cell_seed",
-                      "cell_done","pluck1",
+                      "cell_done","CELL_PAT","pluck1",
                       "pseudo","with_frozen_rng","N_GRID","R0","R0_DF","R1","ALPHA","SEED",
                       "USE_MIC","USE_NEW","USE_SCAN","p_rule","d_rule","K_rule",
                       "SCAN_LAW","SCAN_BAS","cap_for","EVAL_CAP",
@@ -965,7 +983,15 @@ if (length(todo)) {
 }
 
 ## ----------------------------- assemble ------------------------------
-res <- do.call(rbind, lapply(list.files(OUTDIR, "^cell_.*rds$", full.names = TRUE), readRDS))
+## Read defensively: a cell file can be damaged on disk, and an opaque
+## "unknown input format" from readRDS() in the middle of 780 files says
+## nothing about which one.  A cell that cannot be read is also one that
+## cell_done() reported as not done, so run_cell() has just rewritten it --
+## if one still fails here, something is wrong beyond a stale cache.
+.read_cell <- function(f) tryCatch(readRDS(f), error = function(e)
+  stop(sprintf("cannot read %s (%s). Delete that one file and re-run; it will be recomputed from its own seed, so the numbers are unchanged.",
+               basename(f), conditionMessage(e)), call. = FALSE))
+res <- do.call(rbind, lapply(list.files(OUTDIR, CELL_PAT, full.names = TRUE), .read_cell))
 write.csv(res, paste0(OUTSTEM, ".csv"), row.names = FALSE)
 prim <- res[res$q == res$p, ]
 

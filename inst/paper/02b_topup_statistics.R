@@ -108,6 +108,23 @@ stopifnot("the DEFINITIONS END sentinel is missing or duplicated in the main scr
 eval(parse(text = .src[seq_len(.cut - 1L)]), envir = globalenv())
 message(sprintf("definitions taken from %s (%d lines)", MAIN, .cut - 1L))
 
+## The prefix must have supplied everything this script builds on.  Without
+## this check a main script that is out of date -- an older copy found
+## first, or one whose editor buffer was saved back over a newer version --
+## fails later with a bare "object not found", which says nothing about
+## the cause.  Name what is missing and where it should come from.
+.need <- c("gen", "make_stats", "cell_seed", "cell_file", "CELL_PAT",
+           "stream_acc", "stream_match", "build_scan_tables", "cap_for",
+           "with_frozen_rng", "detect_rank_invariant", "p_rule", "K_rule",
+           "OUTDIR", "SEED", "R0", "R1", "R0_DF", "ALPHA", "N_GRID", "NCORES")
+.miss <- .need[!vapply(.need, exists, TRUE, where = globalenv(), inherits = FALSE)]
+if (length(.miss))
+  stop(sprintf(paste("%s does not define: %s.",
+                     "It is an older version than this script expects --",
+                     "check that the copy at that path is the current one",
+                     "(an editor holding an old buffer will silently save it back)."),
+               MAIN, paste(.miss, collapse = ", ")), call. = FALSE)
+
 library(parallel)
 if (is.na(NCORES_TOPUP)) NCORES_TOPUP <- NCORES
 TARGET <- union(ADD, REPLACE)
