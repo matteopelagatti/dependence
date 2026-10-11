@@ -62,9 +62,72 @@ INCLUDE_CHISQ <- TRUE   # relabelling-invariant reference; dropped from the
 TIES    <- "average"    # mandatory for Remark 5; see the header
 SEED    <- 20260811L
 NCORES  <- max(1L, detectCores() - 1L)
-OUTDIR  <- "inst/paper/results"
-OUTSTEM <- "contingency_nominal"
-dir.create(OUTDIR, showWarnings = FALSE)
+## ---------------------------- where output goes -----------------------
+## EVERYTHING this script writes -- cached cells, critical-value tables,
+## the assembled CSV, the LaTeX fragments, the figures -- goes to
+## inst/paper/results inside the package, whatever R's working directory
+## happens to be.
+##
+## That was not true before, and it is why results appeared in two places.
+## OUTDIR was the relative string "results", so a run started at the
+## package root wrote cells to dependence/results while a run started in
+## inst/paper wrote them to inst/paper/results; meanwhile OUTSTEM carried no
+## directory at all, so the assembled CSV and the LaTeX fragments went to
+## the working directory rather than into OUTDIR, and the cells and the
+## tables built from them could end up in different folders.  The three
+## companion scripts each had a third convention.  All of them now use this
+## block, so there is exactly one results directory.
+##
+## The directory is found from the location of THIS FILE, which Rscript,
+## source() and the RStudio editor each report differently, with the
+## working directory as the last resort -- that is the case of "Run
+## selection", where nothing identifies the file.  From each candidate the
+## search walks up to the package root (the DESCRIPTION file) and back down
+## to inst/paper, and also accepts a directory that IS the paper directory,
+## which is what an installed copy of the package looks like.
+paper_dir <- function() {
+  cand <- character(0)
+  a <- commandArgs(trailingOnly = FALSE)                      # Rscript
+  m <- grep("^--file=", a, value = TRUE)
+  if (length(m)) cand <- c(cand, dirname(sub("^--file=", "", m[1L])))
+  for (i in rev(seq_len(sys.nframe()))) {                     # source()
+    of <- tryCatch(sys.frame(i)$ofile, error = function(e) NULL)
+    if (is.character(of) && length(of) == 1L) {
+      cand <- c(cand, dirname(of)); break
+    }
+  }
+  if (requireNamespace("rstudioapi", quietly = TRUE) &&       # RStudio editor
+      isTRUE(tryCatch(rstudioapi::isAvailable(), error = function(e) FALSE))) {
+    p <- tryCatch(rstudioapi::getSourceEditorContext()$path, error = function(e) "")
+    if (is.character(p) && length(p) == 1L && nzchar(p)) cand <- c(cand, dirname(p))
+  }
+  cand <- c(cand, getwd())                                    # last resort
+  is_paper <- function(d)
+    basename(d) == "paper" && length(list.files(d, "^0[0-9].*\\.R$")) > 0L
+  for (st in cand) {
+    d <- tryCatch(normalizePath(st, winslash = "/", mustWork = TRUE),
+                  error = function(e) NA_character_)
+    if (is.na(d)) next
+    for (up in 0:5) {
+      if (is_paper(d)) return(d)
+      if (file.exists(file.path(d, "DESCRIPTION")))
+        for (q in c(file.path(d, "inst", "paper"), file.path(d, "paper")))
+          if (dir.exists(q)) return(q)
+      p <- dirname(d)
+      if (identical(p, d)) break
+      d <- p
+    }
+  }
+  stop("cannot locate inst/paper from \"", getwd(), "\". ",
+       "Set OUTDIR to the results directory by hand just below this block.",
+       call. = FALSE)
+}
+
+PAPER   <- paper_dir()
+OUTDIR  <- file.path(PAPER, "results")
+OUTSTEM <- file.path(OUTDIR, "contingency_nominal")
+dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
+message("results directory: ", OUTDIR)
 
 p_rule <- function(n) max(1L, as.integer(floor(n^0.31)) - 1L)
 ## With mid-ranks the scaled ranks take only k distinct values, so p > k-1
@@ -273,7 +336,7 @@ LEGEND[LEGEND == "B_n"] <- "B(p)"
 LEGEND[LEGEND == "P_n"] <- "P(p)"
 LEGEND[LEGEND == "ChiSq"] <- "ChiSq = P(c-1)"
 
-pdf(paste0(OUTDIR, "/", OUTSTEM, ".pdf"), width = 9.5, height = 5)
+pdf(paste0(OUTSTEM, ".pdf"), width = 9.5, height = 5)
 op <- par(mfrow = c(length(DIMS), length(N_GRID)), mar = c(3.2, 3.2, 2, 0.6),
           mgp = c(2, 0.6, 0), cex = 0.75)
 for (dn in names(DIMS)) for (n in N_GRID) {

@@ -69,8 +69,38 @@ NCORES_TOPUP <- NA               # NA: take NCORES from the main script
 ## Evaluated, not copied.  Anything that would make this script disagree
 ## with the one that produced the cells -- a generator, the seed formula,
 ## an adapter, R0, R1, SEED -- is therefore impossible by construction.
-stopifnot("02_power_continuous.R must be in the working directory" =
-            file.exists(MAIN))
+## OUTDIR comes from there too, so this script cannot write to a different
+## results directory than the one the main script reads.
+##
+## Only the main script's own LOCATION has to be worked out here, since
+## nothing is loaded yet: beside this file, or under the working directory.
+## These few lines are about finding a file and nothing else, so they
+## cannot make the two scripts disagree about the study itself.
+find_beside_me <- function(nm) {
+  cand <- nm
+  a <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+  if (length(a))
+    cand <- c(cand, file.path(dirname(sub("^--file=", "", a[1L])), nm))
+  for (i in rev(seq_len(sys.nframe()))) {
+    of <- tryCatch(sys.frame(i)$ofile, error = function(e) NULL)
+    if (is.character(of) && length(of) == 1L) {
+      cand <- c(cand, file.path(dirname(of), nm)); break
+    }
+  }
+  if (requireNamespace("rstudioapi", quietly = TRUE) &&
+      isTRUE(tryCatch(rstudioapi::isAvailable(), error = function(e) FALSE))) {
+    p <- tryCatch(rstudioapi::getSourceEditorContext()$path, error = function(e) "")
+    if (is.character(p) && length(p) == 1L && nzchar(p))
+      cand <- c(cand, file.path(dirname(p), nm))
+  }
+  cand <- c(cand, file.path("inst", "paper", nm), file.path("..", nm))
+  hit <- cand[file.exists(cand)]
+  if (!length(hit))
+    stop(nm, " not found. Put this script in the same directory as ", nm,
+         ", or run R from there.", call. = FALSE)
+  normalizePath(hit[1L], winslash = "/")
+}
+MAIN <- find_beside_me(MAIN)
 .src <- readLines(MAIN, warn = FALSE)
 .cut <- grep("<<< DEFINITIONS END >>>", .src, fixed = TRUE)
 stopifnot("the DEFINITIONS END sentinel is missing or duplicated in the main script" =
