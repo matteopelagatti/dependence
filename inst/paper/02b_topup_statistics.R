@@ -115,7 +115,7 @@ stopifnot("nothing to do: ADD and REPLACE are both empty" = length(TARGET) > 0L,
           "ADD and REPLACE must not overlap" = !length(intersect(ADD, REPLACE)))
 
 ## ----------------------------- the cells ------------------------------
-CF <- list.files(OUTDIR, "^cell_n.*rds$", full.names = TRUE)
+CF <- list.files(OUTDIR, CELL_PAT, full.names = TRUE)   # from the main script
 stopifnot("no cells found: run 02_power_continuous.R first" = length(CF) > 0L)
 
 ## The scheme index is in the file name and nowhere else, and it enters the
@@ -138,6 +138,20 @@ CELLS <- lapply(CF, parse_cell)
 ## One read of everything, to establish what is there and what the replay
 ## parameters are.  Both are taken FROM THE FILES rather than from the
 ## current configuration: the cells are the authority on how they were made.
+## A damaged cell cannot be topped up: there is nothing to extend and no
+## stored control to verify the replay against.  Say which files, and send
+## the user to the main script, which treats an unreadable cell as not done
+## and recomputes it from its own seed -- after which this script has
+## nothing left to do for that cell.
+.unreadable <- Filter(function(f) is.null(tryCatch(readRDS(f), error = function(e) NULL)), CF)
+if (length(.unreadable))
+  stop(sprintf(paste("%d of %d cell files cannot be read: %s.",
+                     "Run %s first -- it recomputes a damaged cell from its own seed,",
+                     "so the numbers are unchanged -- then run this script again."),
+               length(.unreadable), length(CF),
+               paste(basename(.unreadable), collapse = ", "), basename(MAIN)),
+       call. = FALSE)
+
 INV <- lapply(CELLS, function(z) { d <- readRDS(z$file)
   list(tests = d$test, scheme = d$scheme[1], p = d$p[1], q = d$q[1],
        R1 = max(d$R1), R0cell = if (any(!d$df_calibrated))
@@ -377,7 +391,7 @@ if (length(todo) > 1L) {
                         "SEED","ALPHA","cap_for","EVAL_CAP","p_rule","d_rule",
                         "K_rule","SCAN_LAW","SCAN_BAS","USE_SCAN","USE_NEW",
                         "USE_MIC","topup_cell","OUTDIR",
-                        "stream_acc","stream_match","cell_seed","cell_file"))
+                        "stream_acc","stream_match","cell_seed","cell_file","CELL_PAT"))
     invisible(clusterEvalQ(cl, library(dependence)))
     res <- parLapplyLB(cl, rest, function(i) topup_cell(CELLS[[i]], i))
     stopCluster(cl); on.exit()

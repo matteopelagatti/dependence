@@ -301,7 +301,12 @@ invisible(parLapplyLB(cl, cells, run_cell))
 stopCluster(cl)
 
 ## ----------------------------- assemble ------------------------------
-res <- do.call(rbind, lapply(list.files(OUTDIR, "^cell_.*rds$", full.names = TRUE), readRDS))
+## The results directory is SHARED with the continuous power study, whose
+## cells are cell_n*_s*_nu*_q*.rds.  "^cell_.*rds$" matches all 780 of them
+## too, and their columns are different, so rbind() would splice the two
+## studies together.  Match this study's names and nothing else.
+CELL_PAT <- "^cell_[0-9]+x[0-9]+_n[0-9]+_rho[0-9]+\\.rds$"
+res <- do.call(rbind, lapply(list.files(OUTDIR, CELL_PAT, full.names = TRUE), readRDS))
 res <- res[order(res$dim, res$n, res$rho, res$test), ]
 write.csv(res, paste0(OUTSTEM, ".csv"), row.names = FALSE)
 
