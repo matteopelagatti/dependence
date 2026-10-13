@@ -113,7 +113,7 @@ message(sprintf("definitions taken from %s (%d lines)", MAIN, .cut - 1L))
 ## first, or one whose editor buffer was saved back over a newer version --
 ## fails later with a bare "object not found", which says nothing about
 ## the cause.  Name what is missing and where it should come from.
-.need <- c("gen", "make_stats", "cell_seed", "cell_file", "CELL_PAT",
+.need <- c("gen", "make_stats", "cell_seed", "cell_file", "CELL_PAT", "save_rds",
            "stream_acc", "stream_match", "build_scan_tables", "cap_for",
            "with_frozen_rng", "detect_rank_invariant", "p_rule", "K_rule",
            "OUTDIR", "SEED", "R0", "R1", "R0_DF", "ALPHA", "N_GRID", "NCORES")
@@ -373,7 +373,7 @@ topup_cell <- function(z, i) {
   out <- rbind(d[!(d$test %in% TARGET), ], add)
   out <- out[order(match(out$test, c(have, setdiff(TARGET, have)))), ]
   attr(out, "stream") <- fp
-  saveRDS(out, z$file)
+  save_rds(out, z$file)
   NA_character_
 }
 
@@ -408,7 +408,8 @@ if (length(todo) > 1L) {
                         "SEED","ALPHA","cap_for","EVAL_CAP","p_rule","d_rule",
                         "K_rule","SCAN_LAW","SCAN_BAS","USE_SCAN","USE_NEW",
                         "USE_MIC","topup_cell","OUTDIR",
-                        "stream_acc","stream_match","cell_seed","cell_file","CELL_PAT"))
+                        "stream_acc","stream_match","cell_seed","cell_file","CELL_PAT",
+                        "save_rds"))
     invisible(clusterEvalQ(cl, library(dependence)))
     res <- parLapplyLB(cl, rest, function(i) topup_cell(CELLS[[i]], i))
     stopCluster(cl); on.exit()
@@ -427,7 +428,7 @@ if (length(bad)) {
 
 message(sprintf("\n%d cells extended, every one verified against the stored %s.",
                 length(todo), paste(CONTROL, collapse = " and ")))
-for (k in names(newcrit)) saveRDS(newcrit[[k]]$cv, newcrit[[k]]$file)
+for (k in names(newcrit)) save_rds(newcrit[[k]]$cv, newcrit[[k]]$file)
 message("critical-value tables updated: ", paste(names(newcrit), collapse = ", "))
 message("\nNow re-run ", MAIN, ". It will find every cell complete, compute ",
         "nothing, and write the CSV, the summary and the LaTeX tables.")

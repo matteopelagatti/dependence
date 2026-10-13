@@ -626,6 +626,25 @@ self_test <- function(n, p, q) {
 ##
 ## Using one sample for two of these would evaluate the scan on the very
 ## draws that defined its reference distribution, and it would over-reject.
+## ------------------------- writing a cache file ----------------------
+## saveRDS() writes in place, so a run killed, or a disk filled, part way
+## through leaves a file that exists and cannot be read.  Every later run
+## then finds it, reads it, and dies -- which is how a corrupt cell and a
+## corrupt scan table each cost an afternoon.  Writing to a temporary name
+## in the same directory and renaming over the target makes the replacement
+## atomic: an interrupted write leaves the previous file, or none, never
+## half of one.  file.rename() is atomic within a filesystem on every
+## platform this runs on.
+save_rds <- function(object, file) {
+  tmp <- paste0(file, ".part", Sys.getpid())
+  saveRDS(object, tmp)
+  if (!file.rename(tmp, file)) {
+    ok <- file.copy(tmp, file, overwrite = TRUE); unlink(tmp)
+    if (!ok) stop("could not write ", file, call. = FALSE)
+  }
+  invisible(file)
+}
+
 ## ------------------ a cell's identity: seed and file name -------------
 ## Both live ABOVE the sentinel because 02b_topup_statistics.R needs them
 ## and must not keep its own copy.  A duplicated seed formula is the one
@@ -650,7 +669,7 @@ cell_file <- function(cell) file.path(OUTDIR,
 ## rho where these carry scheme and nu, so the assembling rbind() would
 ## either fail or splice two studies into one table.  One pattern,
 ## defined beside the formatter that produces the names, used everywhere.
-CELL_PAT <- "^cell_n[0-9]+_s[0-9]+_nu[0-9]+_q[0-9]+\\.rds$"
+CELL_PAT <- "^cell_n[0-9]+_s[0-9]+_nu[0-9]+_q[0-9]+\\.rds$"   # never a .part file
 
 ## ------------------ fingerprint of a cell's data stream ---------------
 ## A rejection rate out of R1 is a coarse summary: a change to a generator
@@ -678,8 +697,14 @@ build_scan_tables <- function(ns, R = R0_DF) {
     ## call rather than being recomputed 7.8 million times.
     bas[[key]] <- dependence:::scan_basis(n, K, "poly")
     f <- file.path(OUTDIR, sprintf("scanlaw_n%d_K%d.rds", n, K))
-    if (file.exists(f)) {
-      tb <- readRDS(f)
+    ## A cache, so an unreadable file is a reason to rebuild rather than to
+    ## stop: the table is a deterministic function of (n, K, basis, seed),
+    ## and recomputing it reproduces it exactly.
+    tb <- if (file.exists(f)) tryCatch(readRDS(f), error = function(e) {
+      warning(sprintf("%s could not be read (%s); recomputing it.",
+                      basename(f), conditionMessage(e)), call. = FALSE)
+      NULL }) else NULL
+    if (!is.null(tb)) {
       message(sprintf("scan null laws for n = %d, K = %d: cached", n, K))
     } else {
       message(sprintf("tabulating scan null laws, n = %d, K = %d, R = %g ...",
@@ -687,7 +712,7 @@ build_scan_tables <- function(ns, R = R0_DF) {
       t0 <- Sys.time()
       tb <- indepscan_null(n = n, K = K, R = R, basis = "poly",
                            ties = "first", seed = SEED + 101L * n)
-      saveRDS(tb, f)
+      save_rds(tb, f)
       message(sprintf("  done in %.0f s",
                       as.numeric(difftime(Sys.time(), t0, units = "secs"))))
     }
@@ -863,7 +888,7 @@ for (r in seq_len(nrow(PQ))) {
   }
   cv <- vapply(DF_NAMES, function(k)
     quantile(M[seq_len(caps[k]), k], 1 - ALPHA, names = FALSE, na.rm = TRUE), 0)
-  saveRDS(cv, f); crit_df_table[[key]] <- cv
+  save_rds(cv, f); crit_df_table[[key]] <- cv
 }
 
 ## Cross-check of the scan's calibration, free because both pieces exist.
@@ -936,7 +961,7 @@ run_cell <- function(cell) {
                     df_calibrated = KEEP %in% DF_NAMES,
                     row.names = NULL, stringsAsFactors = FALSE)
   attr(out, "stream") <- fp
-  saveRDS(out, cell_file(cell)); invisible(NULL)
+  save_rds(out, cell_file(cell)); invisible(NULL)
 }
 
 ## ------------------------------- driver ------------------------------
@@ -971,7 +996,7 @@ if (length(todo)) {
                   todo[[1]]$n, dt, length(todo)-1, dt*(length(todo)-1)/3600/NCORES, NCORES))
   cl <- makeCluster(NCORES)
   clusterExport(cl, c("gen","make_stats","run_cell","cell_file","cell_seed",
-                      "cell_done","CELL_PAT","pluck1",
+                      "cell_done","CELL_PAT","save_rds","pluck1",
                       "pseudo","with_frozen_rng","N_GRID","R0","R0_DF","R1","ALPHA","SEED",
                       "USE_MIC","USE_NEW","USE_SCAN","p_rule","d_rule","K_rule",
                       "SCAN_LAW","SCAN_BAS","cap_for","EVAL_CAP",
@@ -1112,13 +1137,14 @@ if (RUN_SCAN_SENS) {
   sens <- list()
   for (n in N_GRID) {
     f <- file.path(OUTDIR, sprintf("scanlaw_sens_n%d_K%d.rds", n, KMAX))
-    if (file.exists(f)) { law <- readRDS(f) } else {
+    law <- if (file.exists(f)) tryCatch(readRDS(f), error = function(e) NULL) else NULL
+    if (!is.null(law)) { } else {
       message(sprintf("sensitivity: null laws n = %d to K = %d", n, KMAX))
       set.seed(SEED + 211L*n)
       M <- t(vapply(seq_len(R0_S), function(i) prof(runif(n), runif(n), KMAX),
                     numeric(KMAX)))
       law <- lapply(seq_len(KMAX), function(k) sort(M[, k]))
-      saveRDS(law, f)
+      save_rds(law, f)
     }
     pvec <- function(v) vapply(seq_along(v), function(k)
       1 - findInterval(v[k], law[[k]]) / length(law[[k]]), 0)
