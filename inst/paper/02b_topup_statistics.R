@@ -52,7 +52,7 @@
 ##          Replacing BET also recomputes its critical values, which were
 ##          calibrated on the same signed quantity.
 ADD     <- c("B_scan")
-REPLACE <- character(0)          # c("BET") once you are ready to pay for it
+REPLACE <- c("BET")
 
 MAIN    <- "02_power_continuous.R"
 ## Controls: statistics already on disk, recomputed on the replayed data and
@@ -175,21 +175,39 @@ INV <- lapply(CELLS, function(z) { d <- readRDS(z$file)
          max(d$R0[!d$df_calibrated]) else 0L,
        ncell = sum(!d$df_calibrated)) })
 
-have <- sort(unique(unlist(lapply(INV, `[[`, "tests"))))
+## Membership is decided CELL BY CELL, not over the union of all cells.
+## A run interrupted part way through leaves some cells extended and the
+## rest not, and a check against the union would then refuse to start
+## again -- "already on disk" -- with no way to finish the job short of
+## recomputing the whole study. This script must be resumable for the same
+## reason the main one is: these runs take hours and get interrupted.
+have     <- sort(unique(unlist(lapply(INV, `[[`, "tests"))))   # anywhere
+have_all <- Reduce(intersect, lapply(INV, `[[`, "tests"))      # everywhere
+nmiss <- vapply(ADD, function(k)
+  sum(!vapply(INV, function(z) k %in% z$tests, TRUE)), 0L)
+nhold <- vapply(REPLACE, function(k)
+  sum(vapply(INV, function(z) k %in% z$tests, TRUE)), 0L)
 message("\nstatistics on disk: ", paste(have, collapse = ", "))
-message("to add:     ", if (length(ADD)) paste(ADD, collapse = ", ") else "none")
-message("to replace: ", if (length(REPLACE)) paste(REPLACE, collapse = ", ") else "none")
-if (length(setdiff(ADD, have)) != length(ADD))
-  stop("already on disk, use REPLACE instead of ADD: ",
-       paste(intersect(ADD, have), collapse = ", "))
-if (!all(REPLACE %in% have))
-  stop("not on disk, use ADD instead of REPLACE: ",
-       paste(setdiff(REPLACE, have), collapse = ", "))
-CONTROL <- setdiff(intersect(CONTROL, have), TARGET)
+if (length(have) != length(have_all))
+  message("  partial: ", paste(setdiff(have, have_all), collapse = ", "),
+          " present in some cells but not all")
+message("to add:     ", if (length(ADD))
+  paste(sprintf("%s (missing from %d of %d cells)", ADD, nmiss, length(CELLS)),
+        collapse = ", ") else "none")
+message("to replace: ", if (length(REPLACE))
+  paste(sprintf("%s (present in %d of %d cells)", REPLACE, nhold, length(CELLS)),
+        collapse = ", ") else "none")
+if (length(ADD) && any(nmiss == 0L))
+  stop("already in every cell, nothing to add: ",
+       paste(ADD[nmiss == 0L], collapse = ", "), ". Use REPLACE to recompute.")
+if (length(REPLACE) && any(nhold == 0L))
+  stop("in no cell, so there is nothing to replace: ",
+       paste(REPLACE[nhold == 0L], collapse = ", "), ". Use ADD instead.")
+CONTROL <- setdiff(intersect(CONTROL, have_all), TARGET)
 if (!length(CONTROL))
-  stop("no control statistic left: every candidate in CONTROL is either absent ",
-       "from the cells or itself a target. Name a statistic that is on disk and ",
-       "is not being changed, or the replay cannot be verified.")
+  stop("no control statistic left: every candidate in CONTROL is either ",
+       "missing from some cell or itself a target. Name a statistic present ",
+       "in every cell and not being changed, or the replay cannot be verified.")
 message("controls:    ", paste(CONTROL, collapse = ", "))
 
 ## Every cell must agree on the replay parameters, or the study was not run
@@ -378,11 +396,21 @@ topup_cell <- function(z, i) {
 }
 
 ## ------------------------------- driver -------------------------------
-todo <- which(!vapply(seq_along(CELLS), function(i)
-  all(TARGET %in% INV[[i]]$tests) && !length(REPLACE), TRUE))
-message(sprintf("\n%d cells, %d to process, %d cores", length(CELLS), length(todo),
+## A cell needs work if it is missing any ADD, or holds any REPLACE.  Cells
+## already extended by an earlier run of this script are skipped, so an
+## interrupted run is finished by starting it again.
+todo <- which(vapply(seq_along(CELLS), function(i) {
+  t_i <- INV[[i]]$tests
+  any(!(ADD %in% t_i)) || any(REPLACE %in% t_i)
+}, TRUE))
+message(sprintf("\n%d cells, %d to process, %d already done, %d cores",
+                length(CELLS), length(todo), length(CELLS) - length(todo),
                 NCORES_TOPUP))
-if (!length(todo)) { message("nothing to do."); quit(save = "no") }
+if (!length(todo)) {
+  message("nothing to do: every cell already holds ",
+          paste(TARGET, collapse = ", "), ".")
+  quit(save = "no")
+}
 
 t0 <- Sys.time(); first <- topup_cell(CELLS[[todo[1]]], todo[1])
 if (!is.na(first)) stop("the replay does not reproduce the stored datasets.\n  ", first,
