@@ -53,8 +53,8 @@ indeptest(x, y, ...)
   y,
   p = max(1L, floor(length(x)^(0.31)) - 1L),
   q = nlevels(y) - 1,
-  basis_num = c("spline", "poly"),
-  basis_fct = c("spline", "poly", "dummy"),
+  basis_num = c("poly", "spline"),
+  basis_fct = c("poly", "spline", "dummy"),
   test = c("Pillai", "Bartlett"),
   ties = c("random", "first", "last", "average"),
   ...
@@ -85,7 +85,10 @@ capped as described for \code{p}.}
 
 \item{basis}{Character string specifying the type of basis functions
 (\code{"poly"}, \code{"spline"}, or \code{"dummy"}, the latter being
-valid only for factors).}
+valid only for factors). Up to order 3 the cubic spline space is the
+polynomial space, so \code{"spline"} and \code{"poly"} give the same
+statistic; they differ from order 4. For a factor at the saturated order,
+the number of levels minus one, every basis gives Pearson's statistic.}
 
 \item{test}{Vector of character strings: can be \code{"Pillai"},
 \code{"Bartlett"}. Multiple selection is allowed.
@@ -205,7 +208,9 @@ explicitly, since it is then no longer a row permutation of the basis.
 \code{x} is numeric and \code{y} is a factor. This is
 the symmetric case of the factor vs numeric method.
 This function inverts the order of x and y, and p and q
-and calls the method \code{indeptest.factor.numeric()}.
+and calls the method \code{indeptest.factor.numeric()}, with the same
+defaults, so that \code{indeptest(x, y)} and \code{indeptest(y, x)} use
+the same bases.
 
  character vs numeric:
 \code{x} is converted into a factor and the method for

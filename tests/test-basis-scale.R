@@ -21,7 +21,8 @@ for (n in c(37L, 100L, 500L))
     for (bf in c(chebyshev_basis, ortho_spline_basis_int)) {
       B <- suppressWarnings(bf(n, p))
       stopifnot(is.matrix(B), nrow(B) == n, all(is.finite(B)))
-      k <- ncol(B)                       # bs() silently raises df to 3
+      stopifnot(ncol(B) == p)            # orders <= 3 are now polynomials,
+      k <- p                             # not bs()'s silent three columns
       stopifnot(max(abs(colMeans(B))) < 1e-8,
                 max(abs(crossprod(B) / n - diag(k))) < 1e-8)
     }

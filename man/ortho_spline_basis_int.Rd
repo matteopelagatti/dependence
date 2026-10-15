@@ -42,6 +42,18 @@ since those paths whiten by Cholesky, which is scale-free; nor was
 common scale factor cancels. If you have saved results obtained with
 \code{basis = "spline"} on continuous data, recompute them.
 
+For \eqn{p \le 3} the function returns \code{\link[=chebyshev_basis]{chebyshev_basis()}}. A cubic
+spline has at least three degrees of freedom, and with exactly three it
+has no interior knot, so its span is the space of cubic polynomials and
+every statistic is unchanged; below three there is no cubic spline, and the
+natural meaning of an order-\eqn{p} spline is the polynomial of degree
+\eqn{p}. Earlier versions passed \eqn{p < 3} to \code{splines::bs()}, which
+silently used three degrees of freedom, and returned the leading columns of
+that basis, which are not the linear and quadratic functions: with
+\code{basis = "spline"} and \eqn{p = q = 1} the test was not a function of
+Spearman's correlation, as it is now. The two families differ only from
+\eqn{p = 4}, where the spline acquires its first interior knot.
+
 Note that \code{\link[=quick_qr]{quick_qr()}}, used directly by the categorical methods of
 \code{\link[=indeptest]{indeptest()}}, returns the \eqn{B^\top B = I} normalisation instead, and
 those methods form \eqn{U^\top V} without dividing by \eqn{n}. The two

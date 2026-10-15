@@ -1,0 +1,108 @@
+K(n) calibration, seed 20261015, R0 = 20000 x 3 batches, R1 = 5000
+2453 informative cells of 7488 (oracle power strictly between 0.15 and 0.95)
+
+attained size on the third null batch, worst family per n (nominal 0.05):
+  n =   25   min 0.0497   max 0.0526   (w_invsq)
+  n =   50   min 0.0486   max 0.0520   (rule12)
+  n =  100   min 0.0491   max 0.0527   (dense_03)
+  n =  200   min 0.0466   max 0.0532   (dense_03)
+  n =  400   min 0.0462   max 0.0529   (rule12)
+  n =  800   min 0.0453   max 0.0503   (dense_28)
+  n = 1600   min 0.0469   max 0.0495   (dense_10)
+
+effective multiplicity (orders / union-bound gain) against log K, dense families:
+  n =   25   ratio in [1.97, 2.47] over K = 2,3,4,5
+  n =   50   ratio in [2.25, 2.70] over K = 2,3,4,5,6
+  n =  100   ratio in [2.13, 2.60] over K = 2,3,4,5,6,8,10
+  n =  200   ratio in [2.02, 2.59] over K = 2,3,4,5,6,8,10,14
+  n =  400   ratio in [1.79, 2.30] over K = 2,3,4,5,6,8,10,14,20
+  n =  800   ratio in [2.06, 2.51] over K = 2,3,4,5,6,8,10,14,20,28
+  n = 1600   ratio in [2.13, 2.61] over K = 2,3,4,5,6,8,10,14,20,28,40
+
+worst-case regret against the oracle order, over informative cells:
+             25    50   100   200   400   800  1600
+dense_02  0.168 0.172 0.330 0.371 0.568 0.617 0.696
+dense_03  0.199 0.142 0.259 0.315 0.476 0.574 0.650
+dense_04  0.267 0.170 0.255 0.319 0.483 0.584 0.655
+dense_05  0.309 0.194 0.204 0.300 0.495 0.559 0.623
+dense_06     NA 0.210 0.203 0.303 0.504 0.562 0.633
+dense_08     NA    NA 0.199 0.287 0.461 0.563 0.632
+dense_10     NA    NA 0.209 0.228 0.331 0.565 0.632
+dense_14     NA    NA    NA 0.202 0.253 0.514 0.569
+dense_20     NA    NA    NA    NA 0.243 0.486 0.497
+dense_28     NA    NA    NA    NA    NA 0.404 0.317
+dense_40     NA    NA    NA    NA    NA    NA 0.322
+dense_max 0.309 0.225 0.209 0.202 0.243 0.404 0.322
+geo2      0.323 0.201 0.258 0.303 0.410 0.385 0.477
+geo3      0.548 0.408 0.387 0.365 0.341 0.317 0.356
+w_invsq   0.465 0.288 0.233 0.297 0.436 0.571 0.637
+w_geom    0.338 0.208 0.220 0.306 0.479 0.570 0.649
+rule12    0.808 0.297 0.367 0.459 0.597 0.655 0.690
+
+mean regret over informative cells:
+             25    50   100   200   400   800  1600
+dense_02  0.071 0.064 0.075 0.096 0.137 0.215 0.276
+dense_03  0.083 0.070 0.077 0.089 0.124 0.197 0.253
+dense_04  0.107 0.084 0.089 0.098 0.134 0.207 0.259
+dense_05  0.120 0.089 0.091 0.079 0.111 0.178 0.224
+dense_06     NA 0.097 0.100 0.083 0.120 0.184 0.231
+dense_08     NA    NA 0.114 0.096 0.126 0.189 0.230
+dense_10     NA    NA 0.116 0.101 0.130 0.179 0.218
+dense_14     NA    NA    NA 0.110 0.130 0.157 0.180
+dense_20     NA    NA    NA    NA 0.137 0.167 0.177
+dense_28     NA    NA    NA    NA    NA 0.169 0.164
+dense_40     NA    NA    NA    NA    NA    NA 0.167
+dense_max 0.120 0.105 0.116 0.110 0.137 0.169 0.167
+geo2      0.123 0.099 0.116 0.124 0.158 0.195 0.222
+geo3      0.155 0.125 0.124 0.123 0.144 0.176 0.199
+w_invsq   0.107 0.072 0.065 0.070 0.100 0.164 0.217
+w_geom    0.096 0.068 0.069 0.072 0.102 0.171 0.231
+rule12    0.147 0.103 0.165 0.219 0.227 0.307 0.355
+
+the flat region: dense families within 0.01 of the best dense family,
+which is the interval of K over which the choice does not matter.
+  n =   25   best dense_02 (0.168)   flat over K = 2
+  n =   50   best dense_03 (0.142)   flat over K = 3
+  n =  100   best dense_08 (0.199)   flat over K = 5, 6, 8, 10
+  n =  200   best dense_14 (0.202)   flat over K = 14
+  n =  400   best dense_20 (0.243)   flat over K = 20
+  n =  800   best dense_28 (0.404)   flat over K = 28
+  n = 1600   best dense_28 (0.317)   flat over K = 28, 40
+
+best K per n, and the rules of the family of (12) that reproduce it:
+  n        25    50   100   200   400   800  1600
+  K*        2     3     8    14    20    28    28
+  closest rules K = max(1, floor(n^r) + c):
+    r = 0.48, c = -1   max deviation 5 order(s)
+    r = 0.47, c = +0   max deviation 5 order(s)
+    r = 0.47, c = +1   max deviation 5 order(s)
+    r = 0.46, c = +2   max deviation 5 order(s)
+    r = 0.48, c = -2   max deviation 6 order(s)
+
+the oracle single order over informative cells: this is the direct
+evidence on the rate, since K must grow at least as fast as the order
+the best alternatives actually need.
+  n      median k*   90th pct   max k*   K_max of grid
+    25           1          2        2        5
+    50           1          2        5        7
+   100           1          5       10       10
+   200           2         11       14       14
+   400           5         11       20       20
+   800           5         25       25       28
+  1600          11         25       25       40
+  by scheme, median best order:
+    linear         1    1    1    1    1    1    1
+    sine 2pi       1    1    1    1    1    1    1
+    sine 4pi       1    1    5    5    5    5    5
+    sine 8pi      NA    1   10   11   11   11   11
+    sine 16pi     NA   NA   NA   10   20   25   25
+    lattice        2    2    2    2    2    2    2
+
+where the profile stops behaving like a chi-squared partial sum:
+  n =   25   var/(2k^2) passes 1.10 at k = never (k^2/n = -), 1.25 at k = never
+  n =   50   var/(2k^2) passes 1.10 at k = never (k^2/n = -), 1.25 at k = never
+  n =  100   var/(2k^2) passes 1.10 at k = never (k^2/n = -), 1.25 at k = never
+  n =  200   var/(2k^2) passes 1.10 at k = 12 (k^2/n = 0.72), 1.25 at k = 14
+  n =  400   var/(2k^2) passes 1.10 at k = 13 (k^2/n = 0.42), 1.25 at k = 16
+  n =  800   var/(2k^2) passes 1.10 at k = 16 (k^2/n = 0.32), 1.25 at k = 20
+  n = 1600   var/(2k^2) passes 1.10 at k = 18 (k^2/n = 0.20), 1.25 at k = 25

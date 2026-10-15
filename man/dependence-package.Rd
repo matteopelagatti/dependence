@@ -19,10 +19,5 @@ Useful links:
 \author{
 \strong{Maintainer}: Matteo Pelagatti \email{matteo.pelagatti@unimib.it}
 
-Authors:
-\itemize{
-  \item Matteo Pelagatti \email{matteo.pelagatti@unimib.it}
-}
-
 }
 \keyword{internal}

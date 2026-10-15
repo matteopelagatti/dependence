@@ -62,7 +62,7 @@ warning, if ggplot2 is not installed.}
 \code{depanalysis()} estimates the pairs of transformations \eqn{(\hat g_s,
 \hat h_s)} that make \eqn{X} and \eqn{Y} as nearly linearly related as the
 chosen spans allow, and draws them. The plots of \eqn{(x, \hat g_s(x))}
-and \eqn{(y, \hat h_s(y))} are the \emph{deformation plots} of \S2.6 of the
+and \eqn{(y, \hat h_s(y))} are the \emph{deformation plots} of Section 2.7 of the
 paper: they display the reshaping of the two variables that maximises
 their correlation, and their shape is often enough to recognise the form
 of the dependence.

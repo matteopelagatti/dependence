@@ -49,7 +49,12 @@ ALPHA    <- c(0.10, 0.05, 0.01)
 TOLS     <- c(0.05, 0.10)   # tolerances reported; the largest drives the search
 CONF     <- 0.95            # one-sided confidence for certification
 STAT     <- "Bartlett"      # statistic driving the search; both are reported
-BASIS    <- "poly"
+## The basis is "poly" unless 01b_null_calibration_spline.R asks otherwise.
+## An option rather than a global variable: the wrapper restores it on exit,
+## even after an error, so a later run of this script in the same session
+## cannot silently inherit "spline".
+BASIS    <- getOption("dependence.calib.basis", "poly")
+stopifnot(BASIS %in% c("poly", "spline"))
 R_FLOOR  <- 2e5             # common count every order in the window receives
 R_BLOCK  <- 2e5             # width of one block; R is always a multiple of it
 R_MAX    <- 1e6             # ceiling per configuration
@@ -123,7 +128,10 @@ paper_dir <- function() {
 
 PAPER   <- paper_dir()
 OUTDIR  <- file.path(PAPER, "results")
-OUTSTEM <- file.path(OUTDIR, "pq_calibration_v3")
+## The polynomial run keeps its historical name; any other basis gets its
+## own, so the two calibrations can never overwrite each other.
+OUTSTEM <- file.path(OUTDIR, if (BASIS == "poly") "pq_calibration_v3" else
+                               paste0("pq_calibration_v3_", BASIS))
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 message("results directory: ", OUTDIR)
 TOL_MAIN <- max(TOLS)
@@ -215,8 +223,8 @@ acceptable_cert  <- function(n, p, tol) excess(n, p)$hi <= tol
 cl <- makeCluster(NCORES)
 invisible(clusterEvalQ(cl, library(dependence)))
 clusterExport(cl, ".block")
-message(sprintf("cores %d | R_floor %g | R_max %g | tolerances %s | conf %g",
-                NCORES, R_FLOOR, R_MAX, paste(TOLS, collapse = ", "), CONF))
+message(sprintf("basis %s | cores %d | R_floor %g | R_max %g | tolerances %s | conf %g",
+                BASIS, NCORES, R_FLOOR, R_MAX, paste(TOLS, collapse = ", "), CONF))
 
 windows <- list(); p_run <- 1L
 for (k in seq_along(N_GRID)) {

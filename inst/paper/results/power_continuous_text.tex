@@ -1,88 +1,123 @@
 % =====================================================================
 %  Replacement narrative for Section 5.1 (continuous variables).
+%  Rebuilt from power_continuous.csv after the October 2026 top-up.
 %
-%  NOTE BEFORE USE: BET is absent from every number below because its
-%  adapter is returning a quantity anti-correlated with dependence on the
-%  symmetric schemes -- 37 per cent of its cells fall below a rejection
-%  rate of 0.03 at a nominal 0.05, and on the circle its power RISES from
-%  0.003 to 0.012 as the dependence weakens.  Once the adapter is fixed
-%  and BET re-run, rebuild the tables and figures and reinstate it here.
-%  The associate editor named BET explicitly, so it cannot be left out of
-%  the submitted version.
+%  TWO THINGS TO SETTLE BEFORE SUBMISSION.
+%
+%  (1) K(n).  The scan runs over k = 1,...,K(n) with K = 4, 5, 6 at
+%      n = 50, 100, 200, which is two orders above the single order that
+%      rule (12) selects.  That shape is a placeholder, not a calibrated
+%      rate: the evidence for it is two points, and the sensitivity study
+%      (RUN_SCAN_SENS in 02_power_continuous.R, over K = 3,4,5,6,8) has
+%      not been run.  Either run it and calibrate K(n) as rule (12) was
+%      calibrated, or say plainly in the text that K was fixed a priori.
+%      The paragraph below says the latter; change it if you do the former.
+%
+%  (2) The cross-reference \S\ref{sec:scan} assumes a subsection on the
+%      scan exists.  It does not yet.
 % =====================================================================
 
-We compared $B_n$ with ten competitors on thirteen continuous dependence
-schemes, each indexed by a noise standard deviation ranging from $0{\cdot}1$
-to $2{\cdot}0$ in steps of $0{\cdot}1$, at $n = 50$, $100$ and $200$, with
-orthogonal polynomials, orders from rule~(12) and $10^4$ replications per
-configuration. Ten of the schemes are those of the earlier literature
-\citep{New09, Hel13, Sim14, Rud17}; three are added here. The \textit{lattice}
-is a balanced $4\times4$ pattern with exactly uniform margins in which every
-rank correlation vanishes identically, so that dependence is visible only once
-the unit square is resolved; \textit{sine 8pi} quadruples the frequency of the
-sine scheme, and is included because a low-order smooth span is blind to
-high-frequency departures by construction and the design should contain the
-case the method is worst at; and \textit{Clayton} supplies the lower-tail
-dependence that none of the ten possessed. All critical values are
-size-adjusted, taken from $2\times10^4$ null datasets per $(n,p,q)$ for the
-statistics that depend on the data only through the ranks, and from
-$5\times10^3$ permuted datasets per configuration for distance covariance and
-HHG, which do not.
+We compared the test with eleven competitors on thirteen continuous dependence
+schemes, each indexed by a noise standard deviation ranging from $0{\cdot}1$ to
+$2{\cdot}0$ in steps of $0{\cdot}1$, at $n = 50$, $100$ and $200$, with
+orthogonal polynomials and $10^4$ replications per configuration. Ten of the
+schemes are those of the earlier literature \citep{New09, Hel13, Sim14, Rud17};
+three are added here. The \textit{lattice} is a balanced $4\times4$ pattern with
+exactly uniform margins in which every rank correlation vanishes identically, so
+that dependence is visible only once the unit square is resolved;
+\textit{sine 8pi} quadruples the frequency of the sine scheme, and is included
+because a low-order smooth span is blind to high-frequency departures by
+construction and the design should contain the case the method is worst at; and
+\textit{Clayton} supplies the lower-tail dependence that none of the ten
+possessed. All critical values are size-adjusted, taken from $2\times10^4$ null
+datasets per $(n,p,q)$ for the statistics that depend on the data only through
+the ranks, and from $5\times10^3$ permuted datasets per configuration for
+distance covariance and HHG, which do not.
+
+Two versions of our test appear. $B_n$ uses the single order of rule~(12),
+giving $p = q = 2, 3, 4$. The \textit{order scan} of \S\ref{sec:scan} instead
+computes the statistic at every order $k = 1,\ldots,K(n)$, converts each to its
+exact null $p$-value and reports the smallest, rejecting when that minimum falls
+below a threshold calibrated on the joint null of the whole family; $K$ was fixed
+in advance at two orders above rule~(12), giving $K = 4, 5, 6$. The $K$
+statistics are nested partial sums of one cross-moment array and are strongly
+positively correlated, with null correlations between adjacent orders running
+from $0{\cdot}41$ to $0{\cdot}81$ at $n = 100$, so calibrating on the joint null
+rather than by Bonferroni recovers a factor of about $1{\cdot}6$ in the
+threshold; that margin is what the scan converts into power.
 
 Table~\ref{tab:power_summary} reports the mean over the $260$ configurations at
-each sample size and Fig.~\ref{fig:power} the full profiles. At $n = 50$, $B_n$
-has the highest mean power of any test considered, $0{\cdot}462$ against
-$0{\cdot}434$ for HHG and $0{\cdot}429$ for its atoms-based variant; at
-$n = 100$ it is within $0{\cdot}033$ of the leader, and at $n = 200$ HHG leads
-by $0{\cdot}054$. The ordering among the remaining competitors is stable, with
-distance covariance, Hoeffding's statistic and the Cram\'er--von Mises
-statistic of \citet{Gen19} within $0{\cdot}03$ of one another throughout, and
-the maximal information coefficient and Chatterjee's $\xi$ trailing by a
-further margin that widens with $n$.
+each sample size and Fig.~\ref{fig:power} the full profiles. The scan has the
+highest mean power at all three sample sizes, $0{\cdot}467$, $0{\cdot}641$ and
+$0{\cdot}790$, against $0{\cdot}434$, $0{\cdot}612$ and $0{\cdot}769$ for HHG
+and $0{\cdot}429$, $0{\cdot}631$ and $0{\cdot}768$ for its atoms-based variant.
+Its margin over the fixed-order test grows with the sample size, by
+$0{\cdot}005$, $0{\cdot}043$ and $0{\cdot}075$, and the direction of that growth
+is the point: rule~(12) lets the span grow only as $n^{0{\cdot}31}$, so the
+restriction it imposes binds harder as $n$ increases, and a test that is not
+obliged to commit to one order in advance escapes it. The ordering among the
+remaining competitors is stable, with distance covariance, Hoeffding's statistic
+and the Cram\'er--von Mises statistic of \citet{Gen19} within $0{\cdot}03$ of one
+another at $n = 200$, and BET, the maximal information coefficient and
+Chatterjee's $\xi$ trailing by a margin that widens with $n$.
 
-What the averages conceal is that the tests are not competing on a common
-axis, and the scheme-by-scheme profile is the more informative comparison.
-$B_n$ is the most powerful test on every scheme in which the dependence is
-neither monotone nor of high frequency. On the circle at $n = 100$ it rejects
-with mean probability $0{\cdot}556$ against $0{\cdot}540$ for the nearest
-competitor and $0{\cdot}078$ for distance covariance; on the lattice,
-$0{\cdot}797$ against $0{\cdot}239$, $0{\cdot}264$ and $0{\cdot}216$ for
-distance covariance, Hoeffding and \citet{Gen19} respectively, those three
-being close to powerless by construction, since the lattice has no rank
-correlation to detect. At $n = 50$ it leads on five of the thirteen schemes
-and by margins of $0{\cdot}10$ to $0{\cdot}13$ on the structured ones.
+No single competitor is ahead of the scan on balance. Counting the thirty-nine
+scheme-by-sample-size combinations, distance covariance leads on seventeen of
+them, Hoeffding's statistic and \citet{Gen19} on sixteen each, the atoms-based
+HHG on eleven and HHG itself on seven; but each leads on a different part of the
+design, and none has a competitive average. A per-scheme comparison against the
+best competitor is therefore a comparison against an oracle that changes
+identity from row to row, not against any procedure a practitioner could run.
 
-The cases in which $B_n$ trails are equally systematic, and
-Proposition~\ref{prop:lp_fixed} accounts for both of them exactly. The first is
-monotone dependence: on the linear, Clayton, fourth-root and two-curves
-schemes the departure is essentially one-dimensional, so the whole
-noncentrality sits in the single coefficient $\theta_{11}$ while the test
-spends $pq$ degrees of freedom and pays a critical value of order $pq$ for
-them. On the linear scheme at $n = 200$, distance covariance attains
-$0{\cdot}850$ against $0{\cdot}625$ for $B_n$. The remedy is in the theory
-rather than outside it: with $p = q = 1$ the statistic is a monotone function
-of Spearman's correlation and the deficit disappears, so what the table
-measures is the price of not knowing in advance that the relation is monotone.
-The second is high frequency: on the sine schemes the direction of departure
-lies largely outside the span at $p = q = 3$, the captured energy
-$\|\Pi_{pq}g\|^2$ is small, and the noncentrality with it. On \textit{sine 8pi}
-at $n = 200$, $B_n$ reaches $0{\cdot}231$ against $0{\cdot}494$ for the
-maximal information coefficient. Here too the span is the instrument: raising
-the orders restores the power, at the cost of degrees of freedom elsewhere,
-which is the trade-off \S\ref{sec:localpower} describes and
-\S\,S4.4 of the Supplementary Material quantifies.
+What the averages conceal is that the tests are not competing on a common axis,
+and the scheme-by-scheme profile is the more informative comparison. The scan is
+the most powerful test on every scheme in which the dependence is neither
+monotone nor of high frequency. At $n = 100$ it attains $0{\cdot}828$ on the
+X-shape against $0{\cdot}780$ for the nearest competitor, $0{\cdot}811$ on the
+lattice against $0{\cdot}792$, and $0{\cdot}567$ on the circle against
+$0{\cdot}540$; on the lattice, distance covariance, Hoeffding's statistic and
+\citet{Gen19} reach $0{\cdot}27$ or less, being close to powerless there by
+construction, since the lattice has no rank correlation to detect.
 
-Two further observations bear on how the table should be read. First, the
-relative standing of $B_n$ is strongest at the smallest sample size and
-weakens as $n$ grows, because rule~(12) lets the span grow only as $n^{0{\cdot}31}$,
-giving $p = q = 4$ at $n = 200$; the comparison at $n = 200$ is therefore
-between a competitor using the whole sample and a test deliberately restricted
-to sixteen directions. Second, of the eleven statistics only $B_n$ and $P_n$
-carry a reference distribution in closed form. Distance covariance and HHG are
-not distribution-free at all and were calibrated here by permutation within
-every configuration, a cost borne by this study rather than by the tests as
-reported; in an application that calibration is the user's to pay, and
+The cases in which the test trails are equally systematic, and
+Proposition~\ref{prop:lp_fixed} accounts for both exactly. The first is monotone
+dependence: on the linear, Clayton, fourth-root and two-curves schemes the
+departure is essentially one-dimensional, so the whole noncentrality sits in the
+single coefficient $\theta_{11}$ while a fixed order spends $pq$ degrees of
+freedom and pays a critical value of order $pq$ for them. Here the scan recovers
+most of what the fixed order loses, since $k = 1$ is one of the orders it looks
+at: on the linear scheme at $n = 100$ it reaches $0{\cdot}624$ against
+$0{\cdot}516$ for rule~(12), and on two curves $0{\cdot}686$ against
+$0{\cdot}584$, leaving distance covariance ahead at $0{\cdot}695$ and
+$0{\cdot}756$ respectively. What remains of the gap is the price of not knowing
+in advance that the relation is monotone, and the scan more than halves it. The
+second case is high frequency: on the sine schemes the direction of departure
+lies largely outside the span, the captured energy $\|\Pi_{pq}g\|^2$ is small,
+and the noncentrality with it. On \textit{sine 8pi} at $n = 100$ both versions
+reach about $0{\cdot}15$ against $0{\cdot}385$ for Chatterjee's $\xi$. Scanning
+does not help here, and should not be expected to: every order it examines lies
+in the same polynomial span, and the span is what fails. Raising $K$, or
+changing the basis, is the instrument; that trade-off is what
+\S\ref{sec:localpower} describes.
+
+Scanning is not free, and the design shows where it is paid for. Where rule~(12)
+already selects a well-matched order the scan gives a little back, on the cubic
+scheme $0{\cdot}959$ against $0{\cdot}978$ at $n = 100$, and the fixed order
+leads on eight of the thirty-nine combinations. The loss is bounded by the
+calibration and is largest where the fixed-order test was already near one.
+
+Finally, of the twelve statistics only $B_n$ and $P_n$ carry a reference
+distribution in closed form, and the scan needs nothing more than a table of the
+joint null simulated once per $(n, K)$ and reused for every dataset of that
+size; it is still exactly distribution-free, because the whole family is a
+function of the two rank vectors alone. Distance covariance and HHG are not
+distribution-free at all and were calibrated here by permutation within every
+configuration, a cost borne by this study rather than by the tests as reported;
+in an application that calibration is the user's to pay, and
 \S\ref{sec:computation} shows what it amounts to. At $n = 10^4$ a single
-evaluation of the HHG statistic takes $123$ seconds against $0{\cdot}007$ for
-$B_n$, before any permutation at all. The comparison on power is close; the
-comparison on what it costs to obtain a $p$-value is not.
+evaluation of the HHG statistic takes $98$ seconds against $0{\cdot}010$ for
+$B_n$, and the statistic of \citet{Gen19} takes $3{,}491$ seconds, before any
+permutation at all; at $n = 10^6$, where distance covariance and HHG cannot be
+computed, $B_n$ takes $8{\cdot}7$ seconds and the scan $K$ times that. The
+comparison on power is close; the comparison on what it costs to obtain a
+$p$-value is not.

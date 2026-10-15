@@ -42,7 +42,10 @@
 #'   capped as described for \code{p}.
 #' @param basis Character string specifying the type of basis functions
 #'   (\code{"poly"}, \code{"spline"}, or \code{"dummy"}, the latter being
-#'   valid only for factors).
+#'   valid only for factors). Up to order 3 the cubic spline space is the
+#'   polynomial space, so \code{"spline"} and \code{"poly"} give the same
+#'   statistic; they differ from order 4. For a factor at the saturated order,
+#'   the number of levels minus one, every basis gives Pearson's statistic.
 #' @param basis_fct Character string specifying the type of basis functions
 #'   for factor variables (\code{"poly"}, \code{"spline"}, or \code{"dummy"}).
 #' @param basis_num Character string specifying the type of basis functions
@@ -314,9 +317,21 @@ indeptest.numeric.numeric <- function(x, y,
   rx <- rank(x, ties.method = ties)
   ry <- rank(y, ties.method = ties)
   tied <- anyDuplicated(rx) > 0L || anyDuplicated(ry) > 0L
-  B  <- bf(n, mpq)
-  U  <- B[as.integer(rx), 1:p, drop = FALSE]
-  V  <- B[as.integer(ry), 1:q, drop = FALSE]
+  if (basis == "poly") {
+    ## Polynomials are nested: the first k columns of the order-max(p, q)
+    ## basis are the order-k basis, so one build serves both variables.
+    B  <- bf(n, mpq)
+    BX <- B[, seq_len(p), drop = FALSE]
+    BY <- B[, seq_len(q), drop = FALSE]
+  } else {
+    ## Splines are not: bs(df = k) places its knots for k, and the first p
+    ## columns of the order-q basis are a different space, concentrated on
+    ## the lower ranks.  Each variable gets the basis of its own order.
+    BX <- bf(n, p)
+    BY <- if (q == p) BX else bf(n, q)
+  }
+  U  <- BX[as.integer(rx), , drop = FALSE]
+  V  <- BY[as.integer(ry), , drop = FALSE]
   S  <- whiten_cross(U, V, tied)
   B_stat <- NA_real_
   B_pval <- NA_real_
@@ -404,13 +419,8 @@ indeptest.factor.factor <- function(x, y,
     yi  <- as.integer(y)
     p <- cap_order(xi, p, "x", !missing(p))
     q <- cap_order(yi, q, "y", !missing(q))
-    if (basis == "poly") {
-      U <- quick_qr(poly(xi, degree = p))
-      V <- quick_qr(poly(yi, degree = q))
-    } else if (basis == "spline") {
-      U <- quick_qr(splines::bs(xi, df = p))
-      V <- quick_qr(splines::bs(yi, df = q))
-    }
+    U <- factor_code_basis(xi, p, basis, "x")
+    V <- factor_code_basis(yi, q, basis, "y")
     Suv <- crossprod(U, V)
     if ("Bartlett" %in% test) {
       l2 <- svd(Suv, 0, 0)$d^2
@@ -494,11 +504,7 @@ indeptest.factor.numeric <- function(x, y,
   } else {
     xi  <- as.integer(x)
     p   <- cap_order(xi, p, "x", !missing(p))
-    if (basis_fct == "poly") {
-      U <- quick_qr(poly(xi, degree = p))
-    } else if (basis_fct == "spline") {
-      U <- quick_qr(splines::bs(xi, df = p))
-    }
+    U   <- factor_code_basis(xi, p, basis_fct, "x")
   }
   # build V for the numeric variable
   bf  <- if (basis_num == "poly") {
@@ -549,17 +555,26 @@ indeptest.factor.numeric <- function(x, y,
 #' \code{x} is numeric and \code{y} is a factor. This is
 #' the symmetric case of the factor vs numeric method.
 #' This function inverts the order of x and y, and p and q
-#' and calls the method \code{indeptest.factor.numeric()}.
+#' and calls the method \code{indeptest.factor.numeric()}, with the same
+#' defaults, so that \code{indeptest(x, y)} and \code{indeptest(y, x)} use
+#' the same bases.
 #'
 #' @export
 indeptest.numeric.factor <- function(x, y,
                                      p = max(1L, floor(length(x)^(0.31)) - 1L),
                                      q = nlevels(y) - 1,
-                                     basis_num = c("spline", "poly"),
-                                     basis_fct = c("spline", "poly", "dummy"),
+                                     basis_num = c("poly", "spline"),
+                                     basis_fct = c("poly", "spline", "dummy"),
                                      test   = c("Pillai", "Bartlett"),
                                      ties   = c("random", "first", "last", "average"),
                                      ...) {
+  ## Resolved here, not passed on as vectors: match.arg() in the callee
+  ## accepts a vector argument only if it equals its own choices exactly,
+  ## and the call with default arguments used to stop with an error.
+  basis_num <- match.arg(basis_num)
+  basis_fct <- match.arg(basis_fct)
+  test      <- match.arg(test, several.ok = TRUE)
+  ties      <- match.arg(ties)
   indeptest.factor.numeric(x = y, y = x, p = q, q = p,
                            basis_fct = basis_fct, basis_num = basis_num,
                            test = test, ties = ties, ...)

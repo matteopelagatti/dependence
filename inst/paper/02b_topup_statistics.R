@@ -51,8 +51,8 @@
 ##          nominal level as a result, so that column cannot be published.
 ##          Replacing BET also recomputes its critical values, which were
 ##          calibrated on the same signed quantity.
-ADD     <- c("B_scan")
-REPLACE <- c("BET")
+ADD     <- character(0)
+REPLACE <- c("B_scan")
 
 MAIN    <- "02_power_continuous.R"
 ## Controls: statistics already on disk, recomputed on the replayed data and
