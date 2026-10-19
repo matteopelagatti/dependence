@@ -51,8 +51,12 @@
 ##          nominal level as a result, so that column cannot be published.
 ##          Replacing BET also recomputes its critical values, which were
 ##          calibrated on the same signed quantity.
-ADD     <- character(0)
-REPLACE <- c("B_scan")
+##
+## October 2026, JASA version: the Kallenberg-Ledwina tests are added to the
+## cells written by the full study.  (The previous setting, REPLACE B_scan,
+## has been run: every cell on disk now holds the corrected scan.)
+ADD     <- c("KL_TS2", "KL_V")
+REPLACE <- character(0)
 
 MAIN    <- "02_power_continuous.R"
 ## Controls: statistics already on disk, recomputed on the replayed data and
@@ -252,6 +256,10 @@ for (nm in NEED) {
                  if (inherits(v, "error")) conditionMessage(v) else "bad value"))
   message(sprintf("  %-10s ok  %-12.6g", nm, v))
 }
+if (any(c("KL_TS2", "KL_V") %in% TARGET)) {
+  message("\nKallenberg-Ledwina adapters against testforDEP:")
+  kl_crosscheck()                         # from the main script; stops on a mismatch
+}
 
 ## Rank-invariance decides where the critical value comes from, so it is
 ## detected here exactly as the main script detects it.  A target that is
@@ -435,7 +443,7 @@ if (length(todo) > 1L) {
                         "R0_SEEN","R1_SEEN","NC_SEEN","have","R0_DF",
                         "SEED","ALPHA","cap_for","EVAL_CAP","p_rule","d_rule",
                         "K_rule","SCAN_LAW","SCAN_BAS","USE_SCAN","USE_NEW",
-                        "USE_MIC","topup_cell","OUTDIR",
+                        "USE_MIC","USE_KL","topup_cell","OUTDIR",
                         "stream_acc","stream_match","cell_seed","cell_file","CELL_PAT",
                         "save_rds"))
     invisible(clusterEvalQ(cl, library(dependence)))

@@ -101,6 +101,32 @@
 ##  recomputed to the last digit).  Keep it that way -- changing R0, R1,
 ##  SEED, the seed formula, or any gen[[...]] body breaks the contract and
 ##  invalidates every cell on disk.
+##
+## ---------------------------------------------------------------------
+##  REVISION, October 2026 (JASA version).  The data-driven rank tests of
+##  Kallenberg and Ledwina (JASA 1999), the closest relatives of the order
+##  scan: Neyman smooth statistics in Legendre polynomials of the ranks with
+##  the number of components chosen by a Schwarz-type rule.  Two versions,
+##  KL_TS2 (diagonal components, d(n) = 4) and KL_V (one mixed component
+##  allowed, d(n) = 2), as defined in Kallenberg and Ledwina (1999) and
+##  implemented in the CRAN package testforDEP.  Switch: USE_KL.
+##
+##  Both are functions of the ranks alone, so they are calibrated in the
+##  critdf machinery once per (n, p, q), like B_n and the scan, and the set
+##  of statistics calibrated per cell is unchanged.  The contract above
+##  therefore holds and they can be ADDED to an existing results/ directory:
+##
+##    *  FROM SCRATCH: run this script; KL_TS2 and KL_V are computed with
+##       everything else.
+##    *  ON TOP OF THE EXISTING CELLS: run 02b_topup_statistics.R, whose ADD
+##       list holds KL_TS2 and KL_V, then re-run this script, which finds every
+##       cell complete and only assembles the tables.  Same datasets, so the
+##       comparison with the stored statistics is paired.
+##
+##  The statistics are computed here from their definitions rather than by
+##  calling testforDEP::testforDEP(), which builds a Monte Carlo p-value at
+##  every call that this harness would throw away.  kl_crosscheck() compares
+##  the two on a few datasets at startup whenever testforDEP is installed.
 ## =====================================================================
 
 library(dependence)
@@ -116,6 +142,8 @@ R0_DF   <- 2e4        # null datasets per (n, p, q) for rank-invariant ones
 USE_MIC <- TRUE
 USE_NEW <- TRUE       # BET, BEAST, xi, fast HHG: the associate editor's four
 USE_SCAN <- TRUE      # the grid version of our test, B_scan
+USE_KL  <- TRUE       # Kallenberg-Ledwina data-driven rank tests, KL_TS2 and KL_V
+KL_CHECK_STRICT <- TRUE  # stop if the KL adapters disagree with testforDEP
 SECONDARY_Q1 <- FALSE # run the primary study first; set TRUE for the q = 1
                       # variant on the five functional schemes afterwards
 SEED    <- 20260810L
@@ -510,7 +538,101 @@ make_stats <- function() {
              c("statistic", "MinP", "sum.chisq", "m.stats"))
     }
   }
+
+  ## ---- Kallenberg and Ledwina (1999), data-driven rank tests -----------
+  ## Components V_(r,s) = {n^(-1/2) sum_i b_r((R_i - 1/2)/n) b_s((S_i - 1/2)/n)}^2,
+  ## with b_j the orthonormal Legendre polynomial of degree j on [0, 1] and
+  ## R_i, S_i the ranks; their rank scaling, (R - 1/2)/n, not our n + 1
+  ## divisor.  The helpers live inside make_stats() so that the adapters
+  ## carry them to the cluster workers in their closures and nothing new
+  ## has to be exported.
+  ##
+  ##  KL_TS2  diagonal components only: T_k = sum_{j <= k} V_(j,j), the order
+  ##          chosen by the modified Schwarz rule S2 = the smallest maximiser
+  ##          of T_k - k log n over 1 <= k <= d(n), and the statistic T_S2.
+  ##          d(n) = 4, the testforDEP default.
+  ##  KL_V    one mixed component allowed, d(n) = 2: the sets {(1,1)} and
+  ##          {(1,1), (i,j)}, (i,j) in {(1,2), (2,1), (2,2)}, compared by
+  ##          T - |set| log n.  Equivalently V_(1,1), plus the largest other
+  ##          component when that exceeds log n.
+  ##
+  ## p and q are ignored: the dimension is chosen by the data, which is the
+  ## point of these tests.  Larger means more dependence for both, and both
+  ## are functions of the ranks, so both are calibrated once per (n, p, q)
+  ## from the simulated null like every other rank-invariant statistic here.
+  if (USE_KL) {
+    kl_legendre <- function(u, d) {            # columns: degrees 1..d
+      t <- 2*u - 1; P <- matrix(0, length(u), d)
+      pm <- rep(1, length(u)); pc <- t; P[, 1L] <- pc
+      if (d >= 2L) for (j in 2L:d) {
+        pn <- ((2*j - 1)*t*pc - (j - 1)*pm) / j
+        pm <- pc; pc <- pn; P[, j] <- pc
+      }
+      P * rep(sqrt(2*seq_len(d) + 1), each = length(u))
+    }
+    kl_comp <- function(x, y, d) {             # d x d matrix of V_(r,s)
+      n <- length(x)
+      A <- kl_legendre((rank(x, ties.method = "first") - 0.5) / n, d)
+      B <- kl_legendre((rank(y, ties.method = "first") - 0.5) / n, d)
+      (crossprod(A, B) / sqrt(n))^2
+    }
+    KL_D_TS2 <- 4L
+    s$KL_TS2 <- function(x, y, p, q) {
+      n <- length(x); Tk <- cumsum(diag(kl_comp(x, y, KL_D_TS2)))
+      Tk[which.max(Tk - seq_along(Tk) * log(n))]   # which.max: first maximiser
+    }
+    s$KL_V <- function(x, y, p, q) {
+      n <- length(x); V <- kl_comp(x, y, 2L)
+      m <- max(V[1L, 2L], V[2L, 1L], V[2L, 2L])
+      if (m < log(n)) V[1L, 1L] else V[1L, 1L] + m
+    }
+  }
   s
+}
+
+## Cross-check of the KL adapters against testforDEP, when it is installed.
+## The adapters follow the published definitions; the package is the
+## reference implementation the paper will cite, so a disagreement means one
+## of the two reads the definition differently (rank scaling, d(n), the
+## tie-break in the selection rule) and must be resolved BEFORE the
+## statistics are computed on the whole grid.  testforDEP builds a Monte
+## Carlo p-value we do not use, so num.MC is set to its minimum, and the call
+## is wrapped in with_frozen_rng() so that it leaves no trace on the
+## generator.  The statistic is read from the result's TS slot.
+kl_crosscheck <- function(n = 100L, reps = 4L, tol = 1e-6) {
+  if (!USE_KL) return(invisible(TRUE))
+  if (!requireNamespace("testforDEP", quietly = TRUE)) {
+    message("  testforDEP is not installed, so KL_TS2 and KL_V are NOT cross-checked\n",
+            "  against it. install.packages(\"testforDEP\") and re-run to enable the check.")
+    return(invisible(NA))
+  }
+  S <- make_stats(); ok <- TRUE
+  alts <- list(linear    = function(x) x + 0.5*rnorm(length(x)),
+               quadratic = function(x) (x - 0.5)^2 + 0.05*rnorm(length(x)),
+               null      = function(x) runif(length(x)))
+  for (a in names(alts)) for (r in seq_len(reps)) {
+    set.seed(7000L + 17L*r + nchar(a)); x <- runif(n); y <- alts[[a]](x)
+    for (tt in c("TS2", "V")) {
+      ours <- S[[paste0("KL_", tt)]](x, y, 1L, 1L)
+      theirs <- with_frozen_rng(tryCatch(
+        as.numeric(methods::slot(testforDEP::testforDEP(x, y, test = tt, p.opt = "MC",
+                                                        num.MC = 100L), "TS")),
+        error = function(e) NA_real_))
+      agree <- isTRUE(abs(ours - theirs) <= tol * max(1, abs(theirs)))
+      if (!agree) ok <- FALSE
+      message(sprintf("  %-9s %-3s rep %d: ours %-12.8g testforDEP %-12.8g %s",
+                      a, tt, r, ours, theirs, if (agree) "ok" else "DIFFERENT"))
+    }
+  }
+  if (!ok) {
+    msg <- paste("the KL adapters do not reproduce testforDEP's statistic. Check the rank",
+                 "scaling, d(n) and the selection tie-break against both the package source",
+                 "and Kallenberg and Ledwina (1999) before running the grid.")
+    if (KL_CHECK_STRICT) stop(msg, " (set KL_CHECK_STRICT <- FALSE to proceed anyway)",
+                              call. = FALSE)
+    warning(msg, call. = FALSE)
+  }
+  invisible(ok)
 }
 
 ## Does the statistic depend on the data only through the ranks?  If so it
@@ -748,6 +870,11 @@ if (!all(STAT_OK)) warning("dropping: ", paste(names(STAT_OK)[!STAT_OK], collaps
 KEEP <- names(STAT_OK)[STAT_OK]
 SECS <- SECS[KEEP]
 stopifnot("B_n must be available" = "B_n" %in% KEEP)
+
+if (USE_KL && any(c("KL_TS2", "KL_V") %in% KEEP)) {
+  message("\nKallenberg-Ledwina adapters against testforDEP:")
+  kl_crosscheck()
+}
 
 message("\norientation check (larger must mean more dependence):")
 ## at the LARGEST n in the grid, so that B_scan finds its null laws and so
@@ -998,7 +1125,7 @@ if (length(todo)) {
   clusterExport(cl, c("gen","make_stats","run_cell","cell_file","cell_seed",
                       "cell_done","CELL_PAT","save_rds","pluck1",
                       "pseudo","with_frozen_rng","N_GRID","R0","R0_DF","R1","ALPHA","SEED",
-                      "USE_MIC","USE_NEW","USE_SCAN","p_rule","d_rule","K_rule",
+                      "USE_MIC","USE_NEW","USE_SCAN","USE_KL","p_rule","d_rule","K_rule",
                       "SCAN_LAW","SCAN_BAS","cap_for","EVAL_CAP",
                       "stream_acc","stream_match",
                       "KEEP","DF_NAMES","CELL_NAMES","crit_df_table","OUTDIR"))
@@ -1066,6 +1193,10 @@ sprintf(paste("Critical values are size-adjusted from $%g$ null datasets per cel
         R0, R0_DF, R1, fmt(0.5/sqrt(R1)),
         paste(vapply(N_GRID, p_rule, 0L), collapse = ", "),
         paste(vapply(N_GRID, d_rule, 0L), collapse = ", ")),
+if (USE_KL && any(c("KL_TS2", "KL_V") %in% TESTS))
+  paste("The data-driven rank tests of Kallenberg and Ledwina (1999) use orthonormal",
+        "Legendre polynomials of the ranks with the modified Schwarz selection rule,",
+        "with $d(n)=4$ diagonal components for $T_{S2}$ and $d(n)=2$ for $V$."),
 "\\end{tabnote}", "\\label{tab:power_summary}", "\\end{table}"), con)
 close(con)
 message("\nWritten: ", OUTSTEM, ".csv, ", OUTSTEM, "_summary.csv, ", OUTSTEM, "_summary.tex")
