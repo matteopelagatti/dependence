@@ -1,9 +1,10 @@
 Package: dependence
 Title: Testing independence
-Version: 0.0.0.9000
+Version: 1.0
 Authors@R: 
     person("Matteo", "Pelagatti", , "matteo.pelagatti@unimib.it", role = c("aut", "cre"))
-Description: The package implements a test of indepedence for any kind of random variable and some tools to assess the type of dependence.
+Description: The package implements a test of indepedence for any kind of random
+    variable and some tools to assess the type of dependence.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

@@ -26,6 +26,18 @@ What changed since the previous build, and why the design changed with it:
     worst adjacent pair deltaE 9.2 deutan, 27.6 normal, all five inside
     the lightness band.  Each family also carries its own dash pattern,
     so identity never rests on hue alone.
+
+21 October 2026: the two data-driven rank tests of Kallenberg and Ledwina
+(1999), T_S2 (diagonal Legendre components, d(n) = 4) and V (mixed
+components, d(n) = 2), joined the study.  They take the next slot of the
+categorical order, magenta #e87ba4.  They do NOT track one another -- T_S2
+collapses on the heteroscedastic, quadratic and cubic schemes where V does
+not -- so they share the hue but not the line style, and each has its own
+legend entry.  Palette re-validated with the six hues: adjacent pairs pass
+(worst CVD deltaE 9.2 deutan, normal 19.6); all-pairs, magenta-orange is the
+weakest pair (normal deltaE 12.9), as yellow-orange already was (13.7), and
+both are separated by dash pattern.  Paths are now relative to this file:
+it reads power_continuous.csv beside it and writes into ./figs.
 """
 
 import numpy as np
@@ -35,8 +47,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-SRC = "/mnt/user-data/uploads/results/power_continuous.csv"
-OUT = "/mnt/user-data/outputs/figs/"
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.join(HERE, "power_continuous.csv")
+OUT = os.path.join(HERE, "figs", "")
+os.makedirs(OUT, exist_ok=True)
 
 d = pd.read_csv(SRC)
 d = d[d.q == d.p]                                   # primary study only
@@ -57,9 +72,12 @@ FAMILY = {
     "BEAST":     ("BET / BEAST",               "#4a3aa7", 1.0, (0, (3, 1.4, 1, 1.4))),
     "MIC":       ("MIC / $\\xi$",              "#eda100", 1.0, (0, (1, 1.6))),
     "xi":        ("MIC / $\\xi$",              "#eda100", 1.0, (0, (1, 1.6))),
+    "KL_V":      ("KL $V$",                    "#e87ba4", 1.0, (0, (7, 1.6))),
+    "KL_TS2":    ("KL $T_{S2}$",               "#e87ba4", 1.0, (0, (1.6, 1.3, 1.6, 1.3, 5, 1.3))),
 }
-LEG_ORDER = ["Order scan", "$B_n$, rule (12)", "HHG / HHG-fast",
-             "dCov / Hoeff. / Genest", "BET / BEAST", "MIC / $\\xi$"]
+LEG_ORDER = ["Order scan", "$B_n$, rule (12)", "KL $V$", "KL $T_{S2}$",
+             "HHG / HHG-fast", "dCov / Hoeff. / Genest", "BET / BEAST",
+             "MIC / $\\xi$"]
 
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#dcdbd7"
 plt.rcParams.update({
@@ -73,7 +91,8 @@ plt.rcParams.update({
 })
 
 PRETTY = {"B_n": "$B_n$", "P_n": "$P_n$", "xi": "$\\xi$",
-          "HHG_fast": "HHG-fast", "B_scan": "Order scan"}
+          "HHG_fast": "HHG-fast", "B_scan": "Order scan",
+          "KL_V": "KL $V$", "KL_TS2": "KL $T_{S2}$"}
 mp = d.pivot_table(index="test", columns="n", values="power", aggfunc="mean")
 sd = d.pivot_table(index="test", columns="n", values="power", aggfunc="std")
 
@@ -178,8 +197,9 @@ for part, block in (("a", SCHEMES[:7]), ("b", SCHEMES[7:])):
     ## previous settings the two were written on top of one another.
     yl = 0.66 / h
     fig.supxlabel("standard deviation of the added noise", fontsize=8, y=yl)
-    fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=7.5,
-               bbox_to_anchor=(0.5, 0.004), handlelength=2.4)
+    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=7.2,
+               bbox_to_anchor=(0.5, 0.004), handlelength=2.6,
+               columnspacing=1.4)
     fig.tight_layout(rect=[0, 1.00 / h, 0.97, 1])
     fig.savefig(OUT + f"power_continuous_full_{part}.pdf")
     fig.savefig(OUT + f"power_continuous_full_{part}.png", dpi=150)
@@ -289,4 +309,6 @@ for t in keep:
         continue
     w = sum(sch[(n, t)][s] > sch[(n, "B_scan")][s] for s in SCHEMES for n in NS)
     print(f"  {t:<11}{w:>3} of 39 scheme-by-size combinations")
+print("\n--- the two Kallenberg-Ledwina tests do not track one another ---")
+print((mp.loc["KL_V"] - mp.loc["KL_TS2"]).round(3).to_string())
 print("\nwrote three figures and two .tex tables")
