@@ -254,10 +254,13 @@ scan_check_K <- function(K, n, x = NULL, y = NULL) {
 #' @keywords internal
 #' @noRd
 scan_basis <- function(n, K, basis = "poly") {
-  if (basis == "poly") {
-    B <- chebyshev_basis(n, K)
-    return(lapply(seq_len(K), function(k) B[, seq_len(k), drop = FALSE]))
-  }
+  ## The polynomial basis is nested, so the n x K matrix itself serves every
+  ## order: order k is its first k columns.  Storing the K leading blocks as
+  ## separate copies, as an earlier version did, costs n K (K + 1) / 2
+  ## doubles, 21.6 GB at n = 1e6 and K = 73, and made the profile five
+  ## times slower than one evaluation of B_n at that size.
+  if (basis == "poly") return(chebyshev_basis(n, K))
+
   lapply(seq_len(K), function(k) {
     Bk <- suppressWarnings(ortho_spline_basis_int(n, k))
     if (ncol(Bk) < k)
@@ -282,7 +285,9 @@ scan_basis <- function(n, K, basis = "poly") {
 #' order-dependent, and the spline basis is not nested, so either one sends
 #' the computation down the per-order route.
 #'
-#' @param bases Optional list from `scan_basis()`, to be reused across draws.
+#' @param bases Optional output of `scan_basis()`, to be reused across draws:
+#'   the n x K matrix for the polynomial basis (a list of the K leading
+#'   blocks is also accepted), a list of per-order matrices for splines.
 #'
 #' @keywords internal
 #' @noRd
@@ -295,14 +300,20 @@ scan_profile <- function(x, y, K, basis = "poly", ties = "first",
   tied <- anyDuplicated(rx) > 0L || anyDuplicated(ry) > 0L
   ix <- as.integer(rx); iy <- as.integer(ry)
 
+  ## order-k block of the basis, from either form of `bases`
+  block <- function(k) {
+    if (!is.matrix(bases)) return(bases[[k]])
+    if (k == ncol(bases)) bases else bases[, seq_len(k), drop = FALSE]
+  }
+
   if (!tied && basis == "poly") {
-    B <- bases[[K]]
+    B <- block(K)
     S2 <- (crossprod(B[ix, , drop = FALSE], B[iy, , drop = FALSE]) / n)^2
     return(vapply(seq_len(K),
                   function(k) n * sum(S2[seq_len(k), seq_len(k)]), 0))
   }
   vapply(seq_len(K), function(k) {
-    Bk <- bases[[k]]
+    Bk <- block(k)
     S <- whiten_cross(Bk[ix, , drop = FALSE], Bk[iy, , drop = FALSE], tied)
     n * sum(S * S)
   }, 0)
