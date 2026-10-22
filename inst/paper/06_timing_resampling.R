@@ -16,11 +16,10 @@
 ##       the per-dataset time and the one-off cost of the reference law.
 ##   (3) B_n re-timed in the same session, so that the new rows can be
 ##       compared with Table S5 even if the machine load differs.
-##   (4) Hoeffding's D with the O(n log n) algorithm of the package
-##       'independence' (Even-Zohar 2020), at n = 1e3 ... 1e6.
 ##
-##  Packages: dependence, energy, HHG, MixedIndTests, minerva, BET,
-##  independence (+ TauStar), Hmisc.
+##  Packages: dependence, energy, HHG, MixedIndTests, minerva, BET.
+##  Hoeffding's test (Hmisc::hoeffd) needs no new timing: its p-value is
+##  asymptotic, so its Table S5 entries are already those of the full test.
 ##
 ##  Same data as Table S5: X standard normal, Y = X/2 + N(0,1), seed 11.
 ##  Run time: roughly 20-40 minutes on a laptop, mostly HHG and MIC.
@@ -29,7 +28,7 @@
 
 suppressPackageStartupMessages({
   library(dependence); library(energy); library(HHG)
-  library(MixedIndTests); library(minerva); library(BET); library(independence)
+  library(MixedIndTests); library(minerva); library(BET)
 })
 
 B_RESAMPLE <- 999L          # replicates per dataset: p-values to 0.001
@@ -118,23 +117,6 @@ for (n in c(1e3, 1e4, 1e5, 1e6)) {
     add("scan", n, "null law, once per n", tl, "R = 2e4")
     add("scan", n, "test given law", med(function() secs(indepscan(x, y, law))))
   }
-}
-
-## ------------- (3) Hoeffding's D: O(n log n) implementation -------------
-## Package 'independence' (Even-Zohar 2020), against Hmisc::hoeffd of
-## Table S5.  precision = 1 skips the p-value, giving the bare statistic;
-## the default computes the asymptotic p-value via TauStar::pHoeffInd.
-message("independence::max_hoeffding() = ", independence::max_hoeffding())
-d <- dat(1000L)
-h1 <- independence::hoeffding.D.test(d$x, d$y, precision = 1)$Dn
-h2 <- Hmisc::hoeffd(cbind(d$x, d$y))$D[1, 2]
-message(sprintf("check at n = 1000: 30 * Dn = %.6f, Hmisc D = %.6f", 30 * h1, h2))
-for (n in c(1e3, 1e4, 1e5, 1e6)) {
-  n <- as.integer(n); d <- dat(n); x <- d$x; y <- d$y
-  add("Hoeffding_fast", n, "statistic", med(function() secs(
-    independence::hoeffding.D.test(x, y, precision = 1))))
-  add("Hoeffding_fast", n, "test (asymptotic p-value)", med(function() secs(
-    independence::hoeffding.D.test(x, y))))
 }
 
 res <- do.call(rbind, rows)
