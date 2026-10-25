@@ -1,0 +1,301 @@
+---
+title: "Testing independence with the dependence package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Testing independence with the dependence package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 7, fig.height = 3.2, out.width = "100%",
+                      dpi = 96)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
+```
+
+The **dependence** package offers three tools for studying the relation
+between two variables $X$ and $Y$:
+
+1. `indeptest()`, a test of independence based on the Bartlett statistic
+   $B_n$ and the Pillai statistic $P_n$, which works for numeric, discrete
+   and categorical variables alike;
+2. `indepscan()`, an adaptive version of the test that scans the expansion
+   order instead of fixing it in advance;
+3. `depanalysis()`, which estimates the transformations of $X$ and $Y$ that
+   make them as correlated as possible and draws them as *deformation plots*,
+   showing what kind of dependence the test has found.
+
+```{r setup}
+library(dependence)
+```
+
+# The idea in brief
+
+$X$ and $Y$ are independent if and only if every function of $X$ is
+uncorrelated with every function of $Y$. The test replaces "every function"
+with a finite family: an orthonormal basis $\phi_1, \ldots, \phi_p$ applied to
+the ranks of $X$ and an orthonormal basis $\psi_1, \ldots, \psi_q$ applied to
+the ranks of $Y$. Working on the ranks makes the procedure invariant to
+monotone transformations of either variable. The bases are discrete
+orthonormal polynomials (`basis = "poly"`, the default) or cubic B-splines
+(`basis = "spline"`); a factor is represented through polynomial, spline or
+dummy coding of its levels.
+
+Let $\hat\lambda_1 \ge \cdots \ge \hat\lambda_r$, $r = \min(p, q)$, be the
+sample canonical correlations between the two expanded data matrices. The
+package computes
+
+$$
+P_n = n \sum_{s=1}^{r} \hat\lambda_s^2,
+\qquad
+B_n = -\left(n - \frac{p + q + 3}{2}\right) \sum_{s=1}^{r} \log\left(1 - \hat\lambda_s^2\right),
+$$
+
+the Pillai and Bartlett statistics. Under independence both converge to a
+$\chi^2$ distribution with $pq$ degrees of freedom. When the orders are left
+unspecified for numeric variables they are set to
+$p = q = \max(1, \lfloor n^{0.31} \rfloor - 1)$, which grows slowly with the
+sample size so that, as $n$ increases, the test gains power against any
+form of dependence.
+
+# Testing independence: $B_n$ and $P_n$
+
+## Two numeric variables
+
+A parabola is the textbook case in which correlation coefficients fail:
+$Y$ depends on $X$ strongly, yet the two are nearly uncorrelated.
+
+```{r parabola}
+set.seed(123)
+n <- 200
+x <- runif(n, -1, 1)
+y <- x^2 + rnorm(n, sd = 0.2)
+cor.test(x, y, method = "spearman")$p.value
+indeptest(x, y)
+```
+
+Spearman's test sees nothing, while both $B_n$ and $P_n$ reject
+independence with p-values that print as zero. The result is a list, so
+individual components can be extracted:
+
+```{r components}
+res <- indeptest(x, y)
+c(B_n = res$B_stat, P_n = res$P_stat, df = res$p * res$q)
+c(B_n = res$B_pvalue, P_n = res$P_pvalue)
+```
+
+The orders, the basis and the statistics to compute can be set explicitly.
+With $p = q = 1$ the expansion contains only the linear function of the
+ranks, and $P_n$ reduces to $n$ times the squared Spearman correlation:
+
+```{r spearman}
+r1 <- indeptest(x, y, p = 1, q = 1, test = "Pillai")
+c(r1$P_stat, n * cor(x, y, method = "spearman")^2)
+indeptest(x, y, p = 3, q = 3, basis = "spline")
+```
+
+Under independence the $\chi^2_{pq}$ approximation holds well already at
+moderate sample sizes. Here is the rejection rate at the 5% level for two
+independent variables with very different marginal distributions:
+
+```{r size}
+set.seed(1)
+pv <- replicate(1000, {
+  r <- indeptest(rnorm(100), rexp(100))
+  c(B_n = r$B_pvalue, P_n = r$P_pvalue)
+})
+rowMeans(pv < 0.05)
+```
+
+## Categorical and mixed variables
+
+The same function handles factors, as well as character and logical
+vectors, which are converted to factors. For two factors the orders default
+to the number of levels minus one; at that order every coding of the levels
+spans the same space, and the Pillai statistic coincides with Pearson's
+$\chi^2$ statistic for the contingency table:
+
+```{r factors}
+set.seed(2)
+f1 <- factor(sample(c("low", "mid", "high"), n, replace = TRUE))
+f2 <- factor(sample(c("A", "B", "C", "D"), n, replace = TRUE))
+indeptest(f1, f2, basis = "dummy")
+chisq.test(table(f1, f2), correct = FALSE)$statistic
+```
+
+A factor can also be tested against a numeric variable. Below, the
+*spread* of $Y$, not its location, depends on the group, so a comparison of
+means would miss the effect:
+
+```{r mixed}
+set.seed(3)
+g <- factor(sample(c("a", "b", "c"), n, replace = TRUE))
+z <- rnorm(n, sd = c(a = 0.5, b = 1, c = 2)[as.character(g)])
+indeptest(g, z)
+```
+
+Integer vectors are treated as numeric, and each order is capped at the
+number of distinct values minus one. With `ties = "average"`, which gives
+tied observations a common rank, integer codes produce exactly the same
+statistic as the corresponding factors with dummy coding:
+
+```{r integer}
+indeptest(as.integer(f1), as.integer(f2), ties = "average")$P_stat
+indeptest(f1, f2, basis = "dummy")$P_stat
+```
+
+# The scan test
+
+The fixed-order test commits to one pair $(p, q)$. If the dependence is of
+high frequency, a small order may not capture it; if it is simple, a large
+order wastes degrees of freedom. `indepscan()` evaluates the Pillai
+statistic at every order $(k, k)$, $k = 1, \ldots, K$, converts each to its
+null p-value $p_k$, and rejects when $p_k < c\,w_k$ for some $k$, with
+weights $w_k$ and with the constant $c$ chosen so that the size is exactly
+$\alpha$. Equivalently, the scan statistic is $\min_k p_k / w_k$.
+
+The $K$ statistics are strongly correlated, so a Bonferroni correction
+would be very conservative. Instead, the joint null distribution is
+simulated. For continuous data without ties the statistics depend on the
+data only through the ranks, so this null distribution does not depend on
+the marginal distributions: one table, computed once for a given sample size,
+serves every data set of that size.
+
+```{r scan-null}
+tab <- indepscan_null(n = 200, R = 2000, seed = 1)
+tab$K
+```
+
+By default $K = \lfloor n^{0.31} \rfloor + 1$, two orders above the default
+of `indeptest()`. We use `R = 2000` replications to keep this vignette
+quick; the default `R = 2e4` gives a more accurate table and takes a few
+seconds. Since tabulation is the expensive step, it is worth saving the
+table with `saveRDS()` and reloading it later.
+
+Consider an oscillating relation buried in noise:
+
+```{r scan}
+set.seed(9)
+x <- runif(200)
+y <- sin(5 * pi * x) + rnorm(200, sd = 1.2)
+indeptest(x, y)
+indepscan(x, y, tab)
+```
+
+At its default order, $p = q = 4$, the fixed-order test does not reject at
+the 5% level, whereas the scan does. The profile shows where the evidence
+lies: orders 1 to 5 give at most moderate evidence, while the statistic at
+order 6, the first one flexible enough to follow the oscillation, is far
+into the tail of its null distribution; `k.min` reports that order. It
+describes where the dependence shows up and is not the result of a model
+selection step: the p-value of the scan already accounts for having looked
+at all orders.
+
+Uniform weights make no assumption about the order at which the dependence
+appears. Decreasing weights, such as the geometric weights
+$w_k \propto 2^{-k}$, spend most of the level on low orders and therefore
+favour monotone dependence. Weights can be changed without recomputing the
+table:
+
+```{r scan-weights}
+sc <- indepscan(x, y, tab, weights = "geometric")
+c(statistic = sc$statistic, p.value = sc$p.value)
+```
+
+The table is exact only for untied data. If `x` or `y` contain ties,
+`indepscan()` warns that the p-value is approximate.
+
+# Deformation plots
+
+A rejection says *that* $X$ and $Y$ are dependent. `depanalysis()` shows
+*how*. It computes the canonical variates behind the test: the pair of
+transformations $(\hat g_1, \hat h_1)$, in the span of the two bases, such
+that $\hat g_1(X)$ and $\hat h_1(Y)$ have the largest possible correlation
+$\hat\lambda_1$, followed by further pairs, each uncorrelated with the
+previous ones. Plotting $\hat g_s(x)$ against $x$ and $\hat h_s(y)$ against
+$y$ gives the deformation plots: they show how each variable must be
+reshaped to make the relation linear, and their shapes are often enough to
+recognise the form of the dependence.
+
+The plots are drawn with **ggplot2**, which must be installed. Without it
+the transformations are still computed and returned in `$g` and `$h`.
+
+## A conditional-variance relation
+
+Here $X$ is the conditional standard deviation of $Y$. Correlation is zero
+by construction:
+
+```{r dep-v}
+set.seed(2022)
+n <- 500
+x <- sqrt(rchisq(n, df = 2))
+y <- rnorm(n) * x
+cor(x, y)
+m <- depanalysis(x, y)
+m
+```
+
+The canonical correlations in `m$cor` are listed in decreasing order. The
+first one, `r round(m$cor[1], 2)`, is the largest correlation that any pair of
+transformations in the two spans can attain.
+
+```{r dep-v-plots, eval = has_ggplot2}
+m$plotx
+m$ploty
+```
+
+$\hat g_1$ is increasing in $x$, while $\hat h_1$ is V-shaped around zero: the
+relation that the first canonical pair linearises is the one between $X$
+and $|Y|$, which is exactly the scale dependence that generated the data.
+The scatter of the transformed pair shows the linearised relation, with the
+fitted line having slope $\hat\lambda_1$:
+
+```{r dep-v-xy, eval = has_ggplot2, fig.width = 4, fig.height = 3.2, out.width = "60%"}
+m$plotxy
+```
+
+## Several modes of association
+
+On a noisy circle, no single pair of transformations captures the whole
+relation. The argument `dimensions` selects which canonical pairs to draw:
+
+```{r dep-circle}
+set.seed(2022)
+th <- runif(n, 0, 2 * pi)
+u <- cos(th) + rnorm(n, sd = 0.1)
+v <- sin(th) + rnorm(n, sd = 0.1)
+m2 <- depanalysis(u, v, p = 6, dimensions = 1:2, xlab = "u", ylab = "v")
+round(m2$cor, 3)
+```
+
+```{r dep-circle-plots, eval = has_ggplot2}
+m2$plotx
+m2$ploty
+```
+
+Writing $u = \cos\theta$ and $v = \sin\theta$, the plots are easy to read.
+In the first pair $\hat g_1$ is U-shaped and $\hat h_1$ is an inverted U:
+up to scale they are $2u^2 - 1 = \cos 2\theta$ and $1 - 2v^2 = \cos 2\theta$,
+two expressions of the same function of the angle. The second pair has the
+W shape of the Chebyshev polynomial $8u^4 - 8u^2 + 1 = \cos 4\theta$ in both
+variables, since $8v^4 - 8v^2 + 1$ is also equal to $\cos 4\theta$: a
+weaker, higher-frequency mode of the same relation. The sign of each pair
+is arbitrary, and the convention is to draw $\hat g_s$ rising at the right
+end of the range of $x$.
+
+The plots are ordinary ggplot objects and can be modified as usual, for
+instance with `m2$plotx + ggplot2::ggtitle("Circle")`. The statistics shown
+in the caption, Bartlett's by default, come from `indeptest()` called with
+the same settings; use `annotate = "Pillai"`, `"both"` or `"none"` to
+change them. The transformed observations and their basis coefficients are
+returned in `$g`, `$h`, `$coef_x` and `$coef_y`, for further use.
+
+# Summary
+
+| Task                                          | Function                          |
+|-----------------------------------------------|-----------------------------------|
+| Test independence at a given order            | `indeptest(x, y, p, q)`           |
+| Tabulate the null distribution of the scan    | `indepscan_null(n, K, R)`         |
+| Test independence scanning orders $1,\ldots,K$ | `indepscan(x, y, null)`           |
+| Visualise the form of the dependence          | `depanalysis(x, y, dimensions)`   |

@@ -33,3 +33,8 @@ only polynomially in the degree; the computed basis is
 orthonormal to machine precision throughout the regime
 p = o(sqrt(n)).
 }
+\examples{
+U <- chebyshev_basis(50, 3)
+crossprod(U) / 50        # the identity
+colMeans(U)              # zero
+}

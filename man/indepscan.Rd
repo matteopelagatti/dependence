@@ -87,13 +87,11 @@ than asymptotic because, with separated ties and continuous margins, the
 whole scan is a function of the two rank vectors alone.
 }
 \examples{
-\donttest{
 set.seed(1)
 tab <- indepscan_null(n = 100, K = 5, R = 2000)   # R = 2e4 in earnest
 x <- runif(100); y <- sin(4 * pi * x) + 0.4 * rnorm(100)
 indepscan(x, y, tab)
 indeptest(x, y)          # the fixed-order test, for comparison
-}
 }
 \seealso{
 \code{\link[=indeptest]{indeptest()}} for the fixed-order test, \code{\link[=indepscan_null]{indepscan_null()}} for

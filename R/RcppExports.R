@@ -24,20 +24,26 @@
 #'
 #' @returns A \eqn{n \times p} matrix with the basis vectors
 #'          of degrees 1, ..., p (the constant is omitted).
+#'
+#' @examples
+#' U <- chebyshev_basis(50, 3)
+#' crossprod(U) / 50        # the identity
+#' colMeans(U)              # zero
 #' @export
 chebyshev_basis <- function(n, p) {
     .Call(`_dependence_chebyshev_basis`, n, p)
 }
 
-#' Quick QR on after de-meaning
+#' Quick QR after de-meaning
 #'
 #' It computes the QR decomposition of a matrix B
-#' after substracting the means of the columns of B.
+#' after subtracting the means of the columns of B.
 #' It is much quicker than \code{qr.Q(qr(M))}.
 #'
 #' @param B matrix to be de-meaned and decomposed
 #'
 #' @returns The Q matrix of the decomposition.
+#' @keywords internal
 quick_qr <- function(B) {
     .Call(`_dependence_quick_qr`, B)
 }

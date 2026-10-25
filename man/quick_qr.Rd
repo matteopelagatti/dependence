@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{quick_qr}
 \alias{quick_qr}
-\title{Quick QR on after de-meaning}
+\title{Quick QR after de-meaning}
 \usage{
 quick_qr(B)
 }
@@ -14,6 +14,7 @@ The Q matrix of the decomposition.
 }
 \description{
 It computes the QR decomposition of a matrix B
-after substracting the means of the columns of B.
+after subtracting the means of the columns of B.
 It is much quicker than \code{qr.Q(qr(M))}.
 }
+\keyword{internal}

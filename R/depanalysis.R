@@ -103,7 +103,6 @@
 #' @seealso [indeptest()] for the test, [indepscan()] for the order scan.
 #'
 #' @examples
-#' \donttest{
 #' set.seed(2022)
 #' n <- 1000
 #'
@@ -123,7 +122,6 @@
 #' m2$plotxy
 #' depanalysis(cos(th) + rnorm(n, sd = .1), sin(th) + rnorm(n, sd = .1),
 #'             p = 6, dimensions = 1:3)$plotx
-#' }
 #' @export
 depanalysis <- function(x, y,
                         p = max(1L, as.integer(floor(length(x)^0.31)) - 1L),
@@ -151,6 +149,7 @@ depanalysis <- function(x, y,
     warning(sum(!ok), " incomplete case(s) removed.", call. = FALSE)
     x <- x[ok]; y <- y[ok]; n <- length(x)
   }
+  force(q)                    # default q = p, taken before p is capped
   p <- cap_order(x, p, "x", !missing(p))
   q <- cap_order(y, q, "y", !missing(q))
   r <- min(p, q)

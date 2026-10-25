@@ -24,6 +24,11 @@ using namespace arma;
 //'
 //' @returns A \eqn{n \times p} matrix with the basis vectors
 //'          of degrees 1, ..., p (the constant is omitted).
+//'
+//' @examples
+//' U <- chebyshev_basis(50, 3)
+//' crossprod(U) / 50        # the identity
+//' colMeans(U)              # zero
 //' @export
 // [[Rcpp::export]]
 arma::mat chebyshev_basis(const int n, const int p) {

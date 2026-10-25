@@ -1,3 +1,11 @@
 ^dependence\.Rproj$
 ^\.Rproj\.user$
+^\.Rhistory$
+^\.RData$
 ^inst/paper$
+^results$
+^cran-comments\.md$
+^CRAN-SUBMISSION$
+^doc$
+^Meta$
+^\.github$

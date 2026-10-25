@@ -127,7 +127,6 @@ B-splines of a higher-order basis is supported near one end of the range
 and makes a poor picture.
 }
 \examples{
-\donttest{
 set.seed(2022)
 n <- 1000
 
@@ -147,7 +146,6 @@ m2$plotx
 m2$plotxy
 depanalysis(cos(th) + rnorm(n, sd = .1), sin(th) + rnorm(n, sd = .1),
             p = 6, dimensions = 1:3)$plotx
-}
 }
 \seealso{
 \code{\link[=indeptest]{indeptest()}} for the test, \code{\link[=indepscan]{indepscan()}} for the order scan.

@@ -4,9 +4,9 @@
 \name{dependence-package}
 \alias{dependence}
 \alias{dependence-package}
-\title{dependence: Testing independence}
+\title{dependence: Nonparametric Tests of Independence for Variables of Any Kind}
 \description{
-The package implements a test of indepedence for any kind of random variable and some tools to assess the type of dependence.
+Tests the independence of two random variables of any kind, continuous, discrete or categorical, through the canonical correlations between orthonormal polynomial or spline expansions of their ranks or level codes. The Pillai and Bartlett statistics are asymptotically chi-squared under independence, and with dummy coding of two factors the Pillai statistic is Pearson's chi-squared statistic. An adaptive version scans the expansion order and is calibrated on the exact joint null distribution of the scan. Deformation plots display the transformations of the two variables that maximise their correlation, and help to recognise the form of the dependence.
 }
 \seealso{
 Useful links:
@@ -18,11 +18,6 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Matteo Pelagatti \email{matteo.pelagatti@unimib.it}
-
-Authors:
-\itemize{
-  \item Matteo Pelagatti \email{matteo.pelagatti@unimib.it}
-}
 
 }
 \keyword{internal}

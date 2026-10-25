@@ -72,13 +72,11 @@
 #'   the tabulation.
 #'
 #' @examples
-#' \donttest{
 #' set.seed(1)
 #' tab <- indepscan_null(n = 100, K = 5, R = 2000)   # R = 2e4 in earnest
 #' x <- runif(100); y <- sin(4 * pi * x) + 0.4 * rnorm(100)
 #' indepscan(x, y, tab)
 #' indeptest(x, y)          # the fixed-order test, for comparison
-#' }
 #' @export
 indepscan <- function(x, y, null,
                       weights = "uniform",
@@ -161,7 +159,18 @@ indepscan <- function(x, y, null,
 #' @param basis,ties As in [indeptest()].
 #' @param seed Optional integer, for reproducible tables.
 #'
-#' @return An object of class `"indepscan_null"`.
+#' @return An object of class `"indepscan_null"`, a list holding the
+#'   settings `n`, `K`, `R`, `basis` and `ties`, the sorted null draws of
+#'   each \eqn{P_n(k,k)} in `cells`, and the \eqn{R \times K} matrix `pmat`
+#'   of null per-order p-values from the second batch.
+#'
+#' @seealso [indepscan()], which uses the table.
+#'
+#' @examples
+#' tab <- indepscan_null(n = 50, K = 4, R = 1000, seed = 1)
+#' tab$K
+#' ## tabulate once per sample size and reuse:
+#' ## saveRDS(tab, "scan_null_n50.rds")
 #' @export
 indepscan_null <- function(n, K = as.integer(floor(n^0.31)) + 1L,
                            R = 2e4,

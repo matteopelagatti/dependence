@@ -305,6 +305,9 @@ indeptest.numeric.numeric <- function(x, y,
   n     <- length(x)
   if (length(y) != n)
     stop("x and y must have the same length.")
+  ## The default q = p must be evaluated before p is capped, or y would
+  ## inherit the cap set by the distinct values of x.
+  force(q)
   p   <- cap_order(x, p, "x", !missing(p))
   q   <- cap_order(y, q, "y", !missing(q))
   mpq <- max(p, q)

@@ -28,7 +28,10 @@ the growth rule of \code{\link[=indeptest]{indeptest()}}, two orders above it.}
 \item{seed}{Optional integer, for reproducible tables.}
 }
 \value{
-An object of class \code{"indepscan_null"}.
+An object of class \code{"indepscan_null"}, a list holding the
+settings \code{n}, \code{K}, \code{R}, \code{basis} and \code{ties}, the sorted null draws of
+each \eqn{P_n(k,k)} in \code{cells}, and the \eqn{R \times K} matrix \code{pmat}
+of null per-order p-values from the second batch.
 }
 \description{
 Simulates the joint null of the nested family \eqn{P_n(k,k)},
@@ -51,4 +54,13 @@ without retabulating. For \code{K = 6} and \code{R = 2e4} that is about 1 Mb.
 Tabulation costs \eqn{2R} evaluations of an order-\eqn{K} cross-moment
 matrix, a few seconds to a few minutes depending on \code{n} and \code{R}. It is done
 once per \verb{(n, K, basis)} and is worth caching with \code{\link[=saveRDS]{saveRDS()}}.
+}
+\examples{
+tab <- indepscan_null(n = 50, K = 4, R = 1000, seed = 1)
+tab$K
+## tabulate once per sample size and reuse:
+## saveRDS(tab, "scan_null_n50.rds")
+}
+\seealso{
+\code{\link[=indepscan]{indepscan()}}, which uses the table.
 }

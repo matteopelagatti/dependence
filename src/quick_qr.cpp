@@ -1,15 +1,16 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
-//' Quick QR on after de-meaning
+//' Quick QR after de-meaning
 //'
 //' It computes the QR decomposition of a matrix B
-//' after substracting the means of the columns of B.
+//' after subtracting the means of the columns of B.
 //' It is much quicker than \code{qr.Q(qr(M))}.
 //'
 //' @param B matrix to be de-meaned and decomposed
 //'
 //' @returns The Q matrix of the decomposition.
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat quick_qr(arma::mat B) {
    // 1. Center the columns to have exactly mean zero

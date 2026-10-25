@@ -1,49 +1,68 @@
-# An independence test for any kind of variables
+# dependence: tests of independence for variables of any kind
 
-The main function of the package is `indeptest(x, y, ...)` that implements two similar tests of independence.
-The vectors `x` and `y` contain the values of the two variables for which we want to test the independence.
-`x` and `y` can be numerical or categorial (factor, in R terminology). The tests use the same rationality
-regardless of the nature of `x` and `y`.
+The **dependence** package tests the independence of two random variables,
+whether they are continuous, discrete or categorical (factors in R
+terminology). The test applies the same principle whatever the nature of the
+two variables: it measures the canonical correlations between orthonormal
+polynomial or spline expansions of the ranks (or of the level codes) of the
+two variables, and summarises them with the Bartlett ($B_n$) and Pillai
+($P_n$) statistics, both asymptotically chi-squared under independence.
 
-The theoretical details of the test will be pubished later. 
+The package provides
 
-Here are a couple of examples.
+* `indeptest(x, y)`, the test at a given expansion order;
+* `indepscan(x, y, null)`, an adaptive test that scans the expansion orders,
+  with the null distribution tabulated once by `indepscan_null(n)`;
+* `depanalysis(x, y)`, the deformation plots: the transformations of `x` and
+  `y` that maximise their correlation, which show the form of the dependence.
 
-Numerical vs. numerical
-```
-> indeptest(rnorm(100), rnorm(100))
+## Installation
 
-Pelagatti-Monti independence test
-  Variable types  : numeric vs. numeric 
-  Basis type      : poly 
-  Basis dimensions: p = 2, q = 2
-  Sample size     : n = 100
-  Pillai stat.    : 2.9207  (p-value = 0.5712)
-  Bartlett stat.  : 2.8563  (p-value = 0.5822)
-```
+```r
+# from CRAN
+install.packages("dependence")
 
-Factor vs. numerical
-```
-> indeptest(sample(factor(letters[1:5]), 100, T), rnorm(100))
-
-Pelagatti-Monti independence test
-  Variable types  : factor vs. numeric 
-  Basis type      : poly(factor) poly(numeric) 
-  Basis dimensions: p = 4, q = 2
-  Sample size     : n = 100
-  Pillai stat.    : 4.0111  (p-value = 0.8561)
-  Bartlett stat.  : 3.9011  (p-value = 0.8659)
+# development version from GitHub
+# install.packages("remotes")
+remotes::install_github("matteopelagatti/dependence", build_vignettes = TRUE)
 ```
 
-Factor vs. factor
-```
-> indeptest(sample(factor(letters[1:5]), 100, T), sample(factor(letters[1:5]), 100, T))
+## Examples
 
-Pelagatti-Monti independence test
-  Variable types  : factor vs. factor 
-  Basis type      : poly 
-  Basis dimensions: p = 4, q = 4
-  Sample size     : n = 100
-  Pillai stat.    : 13.3019  (p-value = 0.6506)
-  Bartlett stat.  : 13.0464  (p-value = 0.6694)
+```r
+library(dependence)
+
+# numeric vs. numeric: a parabola, invisible to correlation coefficients
+x <- runif(200, -1, 1)
+y <- x^2 + rnorm(200, sd = 0.2)
+indeptest(x, y)
+
+# factor vs. numeric
+g <- factor(sample(letters[1:3], 200, replace = TRUE))
+indeptest(g, y)
+
+# factor vs. factor: with dummy coding P_n is Pearson's chi-squared statistic
+h <- factor(sample(LETTERS[1:4], 200, replace = TRUE))
+indeptest(g, h, basis = "dummy")
+
+# order scan
+tab <- indepscan_null(n = 200)
+indepscan(x, y, tab)
+
+# deformation plots (require ggplot2)
+m <- depanalysis(x, y)
+m$plotx
+m$ploty
 ```
+
+See `vignette("dependence")` for a guided tour.
+
+## Reproducibility of the paper
+
+The scripts and results that reproduce the simulation study of the paper
+are in
+[`inst/paper`](https://github.com/matteopelagatti/dependence/tree/master/inst/paper)
+and
+[`results`](https://github.com/matteopelagatti/dependence/tree/master/results).
+They are kept in
+this repository only and are not part of the package distributed on CRAN.
