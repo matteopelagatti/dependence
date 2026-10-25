@@ -1,8 +1,10 @@
 Package: dependence
 Title: Nonparametric Tests of Independence for Variables of Any Kind
 Version: 1.0
-Authors@R:
-    person("Matteo", "Pelagatti", , "matteo.pelagatti@unimib.it", role = c("aut", "cre"))
+Authors@R: c(
+    person("Matteo", "Pelagatti", , "matteo.pelagatti@unimib.it", role = c("aut", "cre")),
+    person("Gianna", "Monti", role = "ctb",
+           comment = "co-author of the paper"))
 Description: Tests the independence of two random variables of any kind,
     continuous, discrete or categorical, through the canonical correlations
     between orthonormal polynomial or spline expansions of their ranks or
