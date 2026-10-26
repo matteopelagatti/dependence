@@ -1,0 +1,51 @@
+source_root,relative_path,bytes,sha256,status
+repository,inst/paper/01_null_calibration.R,14872,42f37084fd77496df38be96fdf70adb4ba5bd03c08f26046c6eef20d05d3a3cb,present; role must be classified
+repository,inst/paper/01b_null_calibration_spline.R,2298,dc807409c6cc291204309366f8da90dd6d4858ffeafe3a1b5393ccd1f8745338,present; role must be classified
+repository,inst/paper/02_power_continuous.R,71938,d2714e380e422a254619f7bbcd0966c775d626a6089ff93635772d2d0224e7b7,present; role must be classified
+repository,inst/paper/02_power_continuous_resumable.R,37483,1c43d65a1749a10518062bfe7c68a0dca964a2a65206b072757a4debf0ec9392,present; role must be classified
+repository,inst/paper/02_power_plots.R,4621,a5a68a7b6741c938269e5a59119f682560be1d1f73f4dd117941cb052b143169,present; role must be classified
+repository,inst/paper/02b_topup_statistics.R,25171,57fd243c07a5c0409f25794389a87f887497ed7f24bbb25bc34f67ce8c9330f4,present; role must be classified
+repository,inst/paper/03_contingency.R,18342,7ebb62024db264828899979a3180db77baac43a0a36df24a1400e9d543577745,present; role must be classified
+repository,inst/paper/04_scan_calibration.R,2918,3abc9443036a0ed092a68b67bd5d6ba81ab482956d3dbea6602b2a612896b981,present; role must be classified
+repository,inst/paper/05_scan_K_calibration.R,26015,d517c8baea428c5ec56be43a888fdc7fa2f03f61014ad8dfd3217a8ac73bac8c,present; role must be classified
+repository,inst/paper/06_timing_resampling.R,6447,2ac9d84a282f7a2d503263e2e65da138e3000b14fe05eb79a9d54785e9c62e1a,present; role must be classified
+repository,inst/paper/06b_timing_scan.R,1656,6e091c3238439a4efe06edfbdb4119a408a0c64d52764f232062567123bf5278,present; role must be classified
+repository,inst/paper/06c_timing_hhg_fast.R,2006,e48a03ad68902cbe096ab1f1e004f19520819927576df874737ecbbe4862c944,present; role must be classified
+repository,inst/paper/pilot/basis_chi2size.R,776,6a0a12c35f064915d7271fde4ebfded2265a1d4e14491b73efa92c83e6828cca,present; role must be classified
+repository,inst/paper/pilot/basis_comparison.R,7773,f19ff7fc597166f7c052cdb897cc9d939db4fd107d6c45e27ffbdf2a28c27d1e,present; role must be classified
+repository,inst/paper/pilot/pilot_multibasis.R,13032,fa3e733e53849cc197f1841ceaa75dacb9cf34c08aa884a98b146b6a625a9efb,present; role must be classified
+repository,inst/paper/results/basis_and_bic_experiment.py,8970,97666d3c3ef4c2f7f0149a6b35495386471908c2a4d9dbb4201573145290f795,present; role must be classified
+repository,inst/paper/results/grid_scan_experiment.py,4751,00e8c2cdd0dfb97933b5e19f95c12fc4b012cfeb6afb5f06619516befc3e6475,present; role must be classified
+repository,inst/paper/results/power_continuous_figures.py,15823,5801cc6cd1a9ff19813c2a27203bca34267aefb9de50215ee226867de28d91fc,present; role must be classified
+repository,inst/paper/verify_indepscan.R,4820,a7a551b21223a6ae6b95c765b70cad8c52849f6550490f76498f35f52337c974,present; role must be classified
+May2026,Brain application.R,20230,3616df4ead58e922276536598aff739d94e50453d751bc44945381e66f9f5d99,external source/reference; not copied or established as final
+May2026,Hughes application.R,11587,fe0604150ad0bdfb7c2a88ad8ab4f417ca96ca70514c5aaddd5a9a55f878f655,external source/reference; not copied or established as final
+May2026,House prices topk screening.R,21949,a9027059dc511383d48f6343582808ca4d86066dfcfb03a4320b461527d9a2f8,external source/reference; not copied or established as final
+May2026,House prices topk screening logRMSE.R,19657,bf80fdd5214575f4a926645a15d27314005647a3cf519ddaa63fd34ed829c539,external source/reference; not copied or established as final
+May2026,House prices topk ranks.R,3916,79c980b53173d87b657698becc5ccf18623769d51e0044d37fd7d0e783f7c73d,external source/reference; not copied or established as final
+May2026,House prices topk replot.R,2736,fa5f09f46907a2e0a72797f5c040fe9c0baedabec07fb8586983718f07a457c7,external source/reference; not copied or established as final
+May2026,House prices topk Bn q1.R,14593,832300fb75604e7b55313e827271fbe04b92d2688b53a01ecc36a8e6ecdfe160,external source/reference; not copied or established as final
+May2026,House prices topk finalize Bn.R,7454,aa67cce294030835f8739f46efe955d9071e1e83d1e282ba80fb136c5bc5634c,external source/reference; not copied or established as final
+May2026,sim_varsel.R,9482,497a00c2cbd2b9e639a08a180d126fa671db984437e47f08d429b65caf413607,external source/reference; not copied or established as final
+May2026,sim_varsel_rho.R,8304,c23d05721ecb95538ccb79380162ef97e3a6f4118e0972367fb835278eeab39c,external source/reference; not copied or established as final
+May2026,summarize_varsel.R,10804,62e0cc5d017038e23be5130d7e7e6ca8fbd4740d445f2b2adb6ecc0510cfe6a5,external source/reference; not copied or established as final
+May2026,summarize_varsel_rho.R,4121,03209d6ee235a27817371f01b729d9c196b3a4a23301459e7f1087dc9c81bb12,external source/reference; not copied or established as final
+May2026,sim_sensitivity.R,7344,6a77d4df08151dc80a4001fef5880f64047f301d5e1d9ebe30a29245e407cec1,external source/reference; not copied or established as final
+May2026,sim_contingency.R,6097,d3a5cbed3f2bb2e73b989f7c50880a3fd7dff402fae223324662704ef79e3472,external source/reference; not copied or established as final
+May2026,dependencetest/exec/simulation_contingency_genest.R,18220,60fd0d09e0050fe8c2b607b735bf8f46797fd7ce7c5c40872590a5825597adb8,external source/reference; not copied or established as final
+old_script,example_of_deformation_plots.R,4562,4a7da232e193c1976d94ae7460781f4532e11b5609381dcf56b5f8b6f877b079,external source/reference; not copied or established as final
+old_script,indeptest_with_cat.R,11899,e9383163ee95bcdc73870482127bdf7b1dfc660fcb9a000022055ace9c85f950,external source/reference; not copied or established as final
+old_script,sim_for_pq_size.R,3218,c50ab4d818d19747c84aa5a18428f4bb2d49fbf27fd00efa545fbc2b8af8f82f,external source/reference; not copied or established as final
+old_script,indeptest.R,3420,8f06718518d8e369afd47981002e26fbffd46f297fe209d2d0901c79403605ef,external source/reference; not copied or established as final
+All2,BrainInjury_mod.R,6515,d23e921144f070e09a50ccd9cfd0f46540f1f273c0b1c7e0661f42e57a0f4248,external source/reference; not copied or established as final
+All2,examples.R,36769,e7ecce6a5daef37e5d9da5bd779be1a9209e7753c46a319137b9b1763e26c648,external source/reference; not copied or established as final
+All2,feature.case1.R,2054,a2bf1a765d6492d834cde1a3aa5cb69bdf1e11b268171abf71acb4102cc2f066,external source/reference; not copied or established as final
+All2,gendataRegMod.R,6648,0cad1be6ed16c2e30b92685f9d8eccfffa4d82cde05eb3d736f2c3c9c0b84d14,external source/reference; not copied or established as final
+All2,indeptest_with_cat.R,7692,a1b124c7652e86311e5480637673d52c12d506911fbc8abb0721579c30c3b96c,external source/reference; not copied or established as final
+All2,libraries.R,675,453f81826edb017109da3dbb76d38384a7fb16223ee8b0a779985a04d37b1f75,external source/reference; not copied or established as final
+All2,utilities.R,3658,021d591818b318eb2611e15bd40424ea9b65b8d6d3345a8b89f2c98d5ccb43a6,external source/reference; not copied or established as final
+manuscript,paper_jasa.tex,70110,88900dcd594b62879d00e431cdeb7683674b864cc85f58270885fe2c2de1595f,external source/reference; not copied or established as final
+manuscript,supplement_jasa.tex,188008,6c26316e8a062e93ed4f2b0b9a673e91564fdfa4d6b8f8d8e0b7fee473bb1a92,external source/reference; not copied or established as final
+repository,results/timing_resampling.csv,1260,b7f7795f35ae460df08e94d588eafdb2c1f769a9d0ff5d1ba1d66a01ef2d8a53,present in repository but outside inst/paper
+repository,results/timing_scan.csv,192,8803972dca714e37f3e5accbc5f21a4398697ff4a319c3440a252c4b029be19f,present in repository but outside inst/paper
+repository,results/timing_hhg_fast.csv,293,8081c77721e532245c4bd736d49bce3549d9dc273cf9ca0bf880a649b5a6fd96,present in repository but outside inst/paper

@@ -19,5 +19,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Matteo Pelagatti \email{matteo.pelagatti@unimib.it}
 
+Other contributors:
+\itemize{
+  \item Gianna Monti (co-author of the paper) [contributor]
+}
+
 }
 \keyword{internal}
